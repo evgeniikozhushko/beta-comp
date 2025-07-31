@@ -43,6 +43,8 @@ export async function GET(request: Request) {
   }
 
   try {
+    console.log('🚀 Processing Google OAuth callback with code:', code?.substring(0, 20) + '...');
+    
     // Process the Google OAuth callback
     // This function will:
     // 1. Exchange the authorization code for an access token
@@ -50,16 +52,21 @@ export async function GET(request: Request) {
     // 3. Find or create the user in our database
     const user = await handleGoogleCallback(code);
     
+    console.log('✅ User obtained from Google OAuth:', user.displayName, user.email);
+    
     // Set the authentication cookie
     // This creates a JWT token and stores it in an HTTP-only cookie
+    console.log('🍪 Setting authentication cookie...');
     await setAuthCookie(user);
     
+    console.log('🏠 Redirecting to home page...');
     // Redirect to the home page (user is now authenticated)
     redirect('/');
     
   } catch (error) {
     // Handle any errors during the OAuth process
-    console.error('Google OAuth error:', error);
+    console.error('❌ Google OAuth error:', error);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
     redirect('/sign-in?error=oauth_error');
   }
 } 
