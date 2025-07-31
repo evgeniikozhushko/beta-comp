@@ -436,67 +436,12 @@ async function getUserByEmail(email: string): Promise<any> {
       return user;
     }
     
-    // If no user found in database, check for test users
-    console.log('No user found in database, checking test users...');
-    const testUsers = [
-      {
-        _id: 'test-user-1',
-        email: 'test@example.com',
-        password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.i8eO', // "password"
-        displayName: 'Test User',
-        googleId: '',
-        picture: '',
-      },
-      {
-        _id: 'test-user-2',
-        email: 'demo@example.com',
-        password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.i8eO', // "password"
-        displayName: 'Demo User',
-        googleId: '',
-        picture: '',
-      },
-    ];
-    
-    const testUser = testUsers.find(u => u.email === email);
-    if (testUser) {
-      console.log('Found test user:', testUser.email);
-      return testUser;
-    }
-    
-    console.log('No user found in database or test users');
+    console.log('No user found in database');
     return null;
     
   } catch (error) {
     console.error('Error finding user by email:', error);
     console.error('Error details:', error instanceof Error ? error.message : String(error));
-    
-    // Fallback to test users if database fails
-    console.log('Database failed, using test users as fallback...');
-    const testUsers = [
-      {
-        _id: 'test-user-1',
-        email: 'test@example.com',
-        password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.i8eO', // "password"
-        displayName: 'Test User',
-        googleId: '',
-        picture: '',
-      },
-      {
-        _id: 'test-user-2',
-        email: 'demo@example.com',
-        password: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS.i8eO', // "password"
-        displayName: 'Demo User',
-        googleId: '',
-        picture: '',
-      },
-    ];
-    
-    const testUser = testUsers.find(u => u.email === email);
-    if (testUser) {
-      console.log('Found test user as fallback:', testUser.email);
-      return testUser;
-    }
-    
     return null;
   }
 }
