@@ -43,12 +43,13 @@ const Page = async () => {
                 displayName
               );
               await setAuthCookie(user);
-              // On success, redirect home
-              redirect("/");
             } catch (err: any) {
               // Re-throw so Next.js will surface the message
               throw new Error(err.message || "Failed to create account");
             }
+            
+            // On success, redirect home (outside try/catch to avoid catching NEXT_REDIRECT)
+            redirect("/");
           }}
         >
           <Input
