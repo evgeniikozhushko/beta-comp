@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
  * - Email/password form with actual authentication
  * - Link to sign-up page
  */
+
 const Page = async () => {
   // Check if user is already authenticated
   const session = await auth();
