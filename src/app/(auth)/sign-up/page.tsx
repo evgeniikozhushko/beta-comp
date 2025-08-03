@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getErrorMessage } from "@/lib/getErrorMessage";
 
 const Page = async () => {
   // If already signed in, send them home
@@ -26,13 +27,13 @@ const Page = async () => {
 
             // Basic server‐side validation
             if (!email || !password || !confirmPassword) {
-              throw new Error("Email, password and confirmation are required");
+              throw new Error("MISSING_FIELDS");
             }
             if (password.length < 8) {
-              throw new Error("Password must be at least 8 characters");
+              throw new Error("PASSWORD_TOO_SHORT");
             }
             if (password !== confirmPassword) {
-              throw new Error("Passwords don’t match");
+              throw new Error("PASSWORDS_MISMATCH");
             }
 
             // Attempt to create user
@@ -44,8 +45,9 @@ const Page = async () => {
               );
               await setAuthCookie(user);
             } catch (err: any) {
-              // Re-throw so Next.js will surface the message
-              throw new Error(err.message || "Failed to create account");
+              // Map error to friendly message and re-throw
+              const friendlyMessage = getErrorMessage(err);
+              throw new Error(friendlyMessage);
             }
             
             // On success, redirect home (outside try/catch to avoid catching NEXT_REDIRECT)

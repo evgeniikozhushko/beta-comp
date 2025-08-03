@@ -365,7 +365,7 @@ export async function createUserWithCredentials(email: string, password: string,
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new Error('User with this email already exists');
+      throw new Error('DUPLICATE_EMAIL');
     }
 
     // Hash password
