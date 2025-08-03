@@ -68,31 +68,24 @@ const Page = async () => {
           action={async (formData) => {
             "use server";
             
-            console.log("🚀 MAIN FORM SERVER ACTION EXECUTING!");
-            console.log("📧 Email:", formData.get('email'));
-            console.log("🔑 Password provided:", !!formData.get('password'));
-            
             const email = formData.get('email') as string;
             const password = formData.get('password') as string;
 
             if (!email || !password) {
-              console.log("❌ Missing email or password");
-              throw new Error('Email and password are required');
+              throw new Error('MISSING_FIELDS');
             }
 
             try {
-              console.log("🔍 Attempting to authenticate user...");
               const user = await signInWithCredentials(email, password);
-              
-              console.log("✅ User authenticated:", user.displayName);
               await setAuthCookie(user);
-              console.log("🍪 Cookie set, redirecting...");
-              
-              redirect('/');
-            } catch (error) {
-              console.error("❌ Authentication failed:", error);
-              throw error;
+            } catch (error: any) {
+              // Map error to friendly message and re-throw
+              const friendlyMessage = getErrorMessage(error);
+              throw new Error(friendlyMessage);
             }
+            
+            // On success, redirect home (outside try/catch to avoid catching NEXT_REDIRECT)
+            redirect('/');
           }}
         >
           {/* Email input field */}

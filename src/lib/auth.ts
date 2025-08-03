@@ -292,7 +292,7 @@ export async function setAuthCookie(user: User): Promise<void> {
  */
 export async function signInWithCredentials(email: string, password: string): Promise<User> {
   if (!email || !password) {
-    throw new Error('Email and password are required');
+    throw new Error('MISSING_FIELDS');
   }
 
   // Find user by email
@@ -302,7 +302,7 @@ export async function signInWithCredentials(email: string, password: string): Pr
   
   if (!user) {
     console.log('No user found with email:', email);
-    throw new Error('Invalid credentials');
+    throw new Error('INVALID_CREDENTIALS');
   }
 
   // Verify password
@@ -320,12 +320,12 @@ export async function signInWithCredentials(email: string, password: string): Pr
   
   if (!password) {
     console.log('ERROR: No password provided');
-    throw new Error('Invalid credentials');
+    throw new Error('INVALID_CREDENTIALS');
   }
   
   if (!user.password) {
     console.log('ERROR: User has no password in database');
-    throw new Error('Invalid credentials');
+    throw new Error('INVALID_CREDENTIALS');
   }
   
   console.log('About to compare passwords...');
@@ -336,7 +336,7 @@ export async function signInWithCredentials(email: string, password: string): Pr
     console.log('❌ Password comparison failed!');
     console.log('Expected hash:', user.password);
     console.log('Provided password:', password);
-    throw new Error('Invalid credentials');
+    throw new Error('INVALID_CREDENTIALS');
   }
 
   console.log('✅ Password is valid!');
