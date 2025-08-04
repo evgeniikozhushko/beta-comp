@@ -15,7 +15,7 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 // TypeScript interfaces for type safety
 export interface User {
   id: string; // Unique user ID in our database
-  googleId: string; // Google's unique identifier for the user
+  googleId?: string; // Google's unique identifier for the user (optional for email/password users)
   displayName: string; // User's display name from Google
   email?: string; // User's email (optional)
   picture?: string; // User's profile picture URL (optional)
@@ -24,6 +24,26 @@ export interface User {
 export interface Session {
   user: User; // User information
   expires: string; // Session expiration timestamp
+}
+
+interface JWTPayload {
+  id: string;
+  googleId?: string;
+  displayName: string;
+  email?: string;
+  picture?: string;
+  exp: number;
+  iat: number;
+}
+
+interface DatabaseUser {
+  _id?: string;
+  id?: string;
+  googleId?: string;
+  displayName: string;
+  email?: string;
+  picture?: string;
+  password?: string;
 }
 
 /**
@@ -40,9 +60,10 @@ export function createToken(payload: object): string {
  * @param token - JWT token to verify
  * @returns Decoded token payload or null if invalid
  */
-export function verifyToken(token: string): object | null {
+export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const result = jwt.verify(token, JWT_SECRET);
+    return typeof result === 'string' ? null : result as JWTPayload;
   } catch {
     return null; // Token is invalid or expired
   }
@@ -397,7 +418,7 @@ export async function createUserWithCredentials(email: string, password: string,
  * @param email - User's email address
  * @returns User object or null
  */
-async function getUserByEmail(email: string): Promise<object | null> {
+async function getUserByEmail(email: string): Promise<DatabaseUser | null> {
   console.log('getUserByEmail called with:', email);
   
   try {
