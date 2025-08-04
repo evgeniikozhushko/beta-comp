@@ -1,37 +1,248 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beta-Comp
 
-## Getting Started
+A modern competition management platform built with Next.js 15, featuring user authentication, event management, and a comprehensive web interface for organizing athletic competitions.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Authentication System
+- **Google OAuth Integration**: One-click sign-in with Google accounts
+- **Email/Password Authentication**: Traditional account creation and login
+- **JWT Token Management**: Secure session handling with HTTP-only cookies
+- **Protected Routes**: Automatic redirection for unauthenticated users
+- **Session Management**: Persistent login state across browser sessions
+
+### User Management
+- **User Registration**: Create accounts with email/password or Google OAuth
+- **Password Security**: BCrypt hashing for secure password storage
+- **User Profiles**: Display name and email management
+- **MongoDB Integration**: Secure user data storage with Mongoose ODM
+
+### Event Management
+- **Event Listing**: View all available events with details
+- **Event Display**: Title, date, location, and description for each event
+- **Dynamic Loading**: Client-side event fetching with loading states
+- **Error Handling**: Graceful error display for failed requests
+
+### User Interface
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Dark Mode Support**: Automatic theme switching capabilities
+- **Modern Components**: Radix UI components with custom styling
+- **Type Safety**: Full TypeScript integration throughout the app
+- **Accessible Forms**: Proper form validation and error messaging
+
+### Technical Features
+- **Server-Side Rendering**: Next.js App Router with RSC support
+- **API Routes**: RESTful endpoints for data management
+- **Database Connection**: MongoDB with connection pooling
+- **Error Boundaries**: Centralized error handling system
+- **Development Tools**: Debug routes for testing and development
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **React 19** - Latest React features and hooks
+- **TypeScript** - Type safety and enhanced development experience
+- **Tailwind CSS** - Utility-first CSS framework
+- **Radix UI** - Accessible component primitives
+- **Lucide React** - Modern icon library
+
+### Backend
+- **Node.js** - Runtime environment
+- **MongoDB** - NoSQL database for user and event data
+- **Mongoose** - MongoDB object modeling
+- **JWT** - JSON Web Tokens for authentication
+- **BCrypt** - Password hashing and verification
+
+### Development Tools
+- **ESLint** - Code linting and formatting
+- **Turbopack** - Fast development build tool
+- **TypeScript** - Static type checking
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Authentication pages group
+│   │   ├── sign-in/       # Login page
+│   │   └── sign-up/       # Registration page
+│   ├── api/               # API routes
+│   │   ├── auth/          # Authentication endpoints
+│   │   ├── events/        # Event management API
+│   │   └── debug/         # Development debugging routes
+│   ├── about/             # About page
+│   ├── events/            # Event listing page
+│   └── page.tsx           # Home page (protected)
+├── components/            # Reusable UI components
+│   └── ui/                # Base UI components
+├── lib/                   # Utility functions and configurations
+│   ├── auth.ts            # Authentication logic
+│   ├── mongodb.ts         # Database connection
+│   ├── models/            # Database models
+│   └── utils.ts           # General utilities
+└── styles/                # Global styles and Tailwind config
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚦 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
+- Node.js 18+ 
+- MongoDB database (local or cloud)
+- Google OAuth credentials (for Google sign-in)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/evgeniikozhushko/beta-comp.git
+   cd beta-comp
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Environment Setup**
+   Create a `.env.local` file in the root directory:
+   ```env
+   # Database
+   MONGODB_URI=your_mongodb_connection_string
+   
+   # JWT Secret (generate a secure random string)
+   JWT_SECRET=your_jwt_secret_key
+   
+   # Google OAuth (optional, for Google sign-in)
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📋 Available Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# beta-comp
+- `npm run dev` - Start development server with Turbopack
+- `npm run build` - Create production build
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint for code quality
+
+## 🔐 Authentication Flow
+
+1. **New Users**: Visit `/sign-up` to create an account or use Google OAuth
+2. **Existing Users**: Visit `/sign-in` to log in with credentials or Google
+3. **Protected Access**: All main features require authentication
+4. **Session Management**: Users stay logged in across browser sessions
+5. **Secure Logout**: Sign out clears all session data
+
+## 🎯 Core Pages
+
+### Home Page (`/`)
+- **Access**: Protected (requires authentication)
+- **Features**: Welcome message, navigation to features, sign-out functionality
+- **Display**: User profile information, available features overview
+
+### Authentication Pages
+- **Sign In** (`/sign-in`): Login with email/password or Google OAuth
+- **Sign Up** (`/sign-up`): Create new account with email/password
+
+### Event Management (`/events`)
+- **Access**: Public (currently)
+- **Features**: View all events, event details, navigation back to home
+- **Data**: Fetches events from `/api/events` endpoint
+
+### About Page (`/about`)
+- **Access**: Public
+- **Content**: Information about the platform and its features
+
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /api/auth/google` - Initiate Google OAuth flow
+- `GET /api/auth/google/callback` - Handle Google OAuth callback
+
+### Events
+- `GET /api/events` - Retrieve all events with pagination support
+
+### Development (Debug Routes)
+- `POST /api/debug/create-test-user` - Create test users for development
+- `GET /api/debug/users` - List all users (development only)
+
+## 🚀 Deployment
+
+The application is configured for deployment on Render.com with automatic builds from GitHub.
+
+### Build Requirements
+- Node.js 22.16.0 (specified in Render)
+- All dependencies properly installed
+- Environment variables configured
+- MongoDB connection established
+
+### Build Command
+```bash
+npm install; npm run build
+```
+
+## 🛡 Security Features
+
+- **Password Hashing**: BCrypt for secure password storage
+- **JWT Tokens**: Secure session management
+- **HTTP-Only Cookies**: Prevent XSS attacks on session tokens
+- **Input Validation**: Server-side validation for all user inputs
+- **Error Handling**: Secure error messages without exposing system details
+- **Type Safety**: TypeScript prevents runtime type errors
+
+## 🔄 Future Enhancements
+
+Based on the current structure, planned features include:
+- **Athlete Database**: Comprehensive athlete profile management
+- **Live Scoring**: Real-time competition scoring system
+- **Custom Features**: Configurable competition types and rules
+- **Advanced Event Management**: Event creation, editing, and scheduling
+- **Role-based Access**: Admin, judge, and athlete user roles
+- **Reporting**: Competition results and analytics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is private and proprietary.
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Build Fails with TypeScript Errors**
+   - Ensure all type definitions are installed (`@types/*` packages)
+   - Check for any `any` types and replace with proper interfaces
+
+2. **Database Connection Issues**
+   - Verify MONGODB_URI in environment variables
+   - Check MongoDB server accessibility
+   - Ensure database user has proper permissions
+
+3. **Authentication Not Working**
+   - Verify JWT_SECRET is set and consistent
+   - Check Google OAuth credentials if using Google sign-in
+   - Clear browser cookies and try again
+
+4. **Development Server Issues**
+   - Clear `.next` cache: `rm -rf .next`
+   - Reinstall dependencies: `rm -rf node_modules package-lock.json && npm install`
+   - Check for port conflicts (default: 3000)
+
+## 📞 Support
+
+For support and questions, please create an issue in the GitHub repository.
