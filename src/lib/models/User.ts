@@ -1,5 +1,5 @@
   // models/User.ts
-  import mongoose, { Schema, Document, model, models } from 'mongoose';
+  import { Schema, Document, model, models } from 'mongoose';
 
   // TypeScript interface for the User document
   export interface IUser extends Document {

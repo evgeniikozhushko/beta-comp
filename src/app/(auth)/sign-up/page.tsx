@@ -44,9 +44,9 @@ const Page = async () => {
                 displayName
               );
               await setAuthCookie(user);
-            } catch (err: any) {
+            } catch (err: unknown) {
               // Map error to friendly message and re-throw
-              const friendlyMessage = getErrorMessage(err);
+              const friendlyMessage = getErrorMessage(err instanceof Error ? err : String(err));
               throw new Error(friendlyMessage);
             }
             

@@ -50,7 +50,7 @@ export async function GET() {
             events,
             total: events.length 
         })
-    } catch (error) {
+    } catch {
         return Response.json(
             { error: "Internal Server Error" },
             { status: 500 }

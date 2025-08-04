@@ -78,9 +78,9 @@ const Page = async () => {
             try {
               const user = await signInWithCredentials(email, password);
               await setAuthCookie(user);
-            } catch (error: any) {
+            } catch (error: unknown) {
               // Map error to friendly message and re-throw
-              const friendlyMessage = getErrorMessage(error);
+              const friendlyMessage = getErrorMessage(error instanceof Error ? error : String(error));
               throw new Error(friendlyMessage);
             }
             

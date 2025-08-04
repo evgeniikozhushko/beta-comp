@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Event {
   id: number;
@@ -62,12 +63,12 @@ export default function EventPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Events</h1>
-          <a
+          <Link
             href="/"
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm px-4 py-2"
           >
             ← Home
-          </a>
+          </Link>
         </div>
         {events.length === 0 ? (
           <p className="text-gray-600">No events found.</p>

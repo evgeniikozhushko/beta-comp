@@ -31,7 +31,7 @@ export interface Session {
  * @param payload - User data to encode in the token
  * @returns JWT token string
  */
-export function createToken(payload: any): string {
+export function createToken(payload: object): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 }
 
@@ -40,10 +40,10 @@ export function createToken(payload: any): string {
  * @param token - JWT token to verify
  * @returns Decoded token payload or null if invalid
  */
-export function verifyToken(token: string): any {
+export function verifyToken(token: string): object | null {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+  } catch {
     return null; // Token is invalid or expired
   }
 }
@@ -397,7 +397,7 @@ export async function createUserWithCredentials(email: string, password: string,
  * @param email - User's email address
  * @returns User object or null
  */
-async function getUserByEmail(email: string): Promise<any> {
+async function getUserByEmail(email: string): Promise<object | null> {
   console.log('getUserByEmail called with:', email);
   
   try {
