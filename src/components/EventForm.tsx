@@ -32,7 +32,7 @@ export default function EventForm({ facilities }: Props) {
   });
 
   return (
-    <form action={formAction} className="space-y-6 max-w-lg" noValidate>
+    <form action={formAction} className="space-y-4 max-w-lg" noValidate>
       {/* NAME */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
