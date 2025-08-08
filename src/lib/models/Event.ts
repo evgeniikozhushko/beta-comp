@@ -10,6 +10,7 @@ export interface IEvent extends Document {
   discipline: "Boulder" | "Lead" | "Speed";
   ageCategories: string[]; // e.g. ["U12", "U18", "Open"]
   division: "Male" | "Female" | "Mixed";
+  createdBy: Types.ObjectId; // → reference to User who created event
 
   // Optional extras
   imageUrl?: string; // URL to banner/photo
@@ -31,6 +32,7 @@ const EventSchema = new Schema<IEvent>(
     durationMinutes: { type: Number, required: true, min: 1 },
 
     facility: { type: Schema.Types.ObjectId, ref: "Facility", required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
     discipline: {
       type: String,
