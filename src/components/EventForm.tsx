@@ -17,6 +17,7 @@ interface Props {
   facilities: FacilityOption[];
 }
 
+
 /**
  * EventForm
  *
@@ -65,7 +66,7 @@ export default function EventForm({ facilities }: Props) {
           htmlFor="durationMinutes"
           className="block text-sm font-medium mb-1"
         >
-          Duration (minutes)
+          Duration (days)
         </label>
         <Input
           id="durationMinutes"
@@ -81,19 +82,27 @@ export default function EventForm({ facilities }: Props) {
         <label htmlFor="facility" className="block text-sm font-medium mb-1">
           Facility
         </label>
-        <select
-          id="facility"
-          name="facility"
-          required // client must choose a facility
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
-        >
-          <option value="">Select a facility</option>
-          {facilities.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.name}
-            </option>
-          ))}
-        </select>
+        {facilities.length === 0 ? (
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3">
+            <p className="text-sm text-yellow-800">
+              No facilities available. Please seed facilities or contact an administrator.
+            </p>
+          </div>
+        ) : (
+          <select
+            id="facility"
+            name="facility"
+            required // client must choose a facility
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+          >
+            <option value="">Select a facility</option>
+            {facilities.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* DISCIPLINE */}

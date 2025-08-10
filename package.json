@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "gen:facilities": "tsx scripts/generate-facilities-from-cec.ts",
+    "seed:facilities": "tsx scripts/seed-facilities.ts",
+    "seed:facilities:manual": "tsx scripts/seed-facilities-manual.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",
@@ -14,6 +17,7 @@
     "@types/cookie-session": "^2.0.49",
     "@types/passport-google-oauth20": "^2.0.16",
     "bcrypt": "^6.0.0",
+    "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookie-parser": "^1.4.7",
@@ -30,6 +34,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.3.1",
+    "tsx": "^4.20.3",
     "zod": "^4.0.5"
   },
   "devDependencies": {

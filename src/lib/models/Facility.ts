@@ -2,7 +2,7 @@ import { Schema, Document, model, models, Types } from "mongoose";
 
 export interface IFacility extends Document {
   name: string;
-  address: string;
+  address?: string;
   city: string;
   province: string;
   country: string;
@@ -24,7 +24,6 @@ const FacilitySchema = new Schema<IFacility>(
     },
     address: {
       type: String,
-      required: true,
       trim: true,
     },
     city: {
@@ -41,6 +40,7 @@ const FacilitySchema = new Schema<IFacility>(
       type: String,
       required: true,
       trim: true,
+      default: "Canada",
     },
     contactEmail: {
       type: String,
@@ -64,6 +64,8 @@ const FacilitySchema = new Schema<IFacility>(
   },
   { timestamps: true }
 );
+
+FacilitySchema.index({ name: 1, city: 1, province: 1, country: 1 }, { unique: true });
 
 // Prevent model recompilation in dev
 export default models.Facility || model<IFacility>("Facility", FacilitySchema);

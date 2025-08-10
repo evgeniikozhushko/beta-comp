@@ -53,10 +53,10 @@ export default async function EventsPage() {
     );
   }
 
-  // 5. Map facilities into a simple array for the dropdown in EventForm
+  // 5. Map facilities with location info for the dropdown in EventForm
   const facilities = rawFacilities.map((f) => ({
     id: f._id.toString(), // Convert ObjectId to string
-    name: f.name, // Facility name
+    name: f.city ? `${f.name} — ${f.city}, ${f.province}` : `${f.name} — ${f.province}`, // Include location
   }));
 
   // 6. Render the page: form + event list
