@@ -5,7 +5,7 @@ export interface IEvent extends Document {
   // Required core info
   name: string;
   date: Date; // when the event starts
-  durationMinutes: number; // length of event in minutes
+  durationDays: number; // length of event in days
   facility: Types.ObjectId; // → reference to a Facility collection
   discipline: "Boulder" | "Lead" | "Speed";
   ageCategories: string[]; // e.g. ["U12", "U18", "Open"]
@@ -29,7 +29,7 @@ const EventSchema = new Schema<IEvent>(
   {
     name: { type: String, required: true, trim: true },
     date: { type: Date, required: true },
-    durationMinutes: { type: Number, required: true, min: 1 },
+    durationDays: { type: Number, required: true, min: 1 },
 
     facility: { type: Schema.Types.ObjectId, ref: "Facility", required: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },

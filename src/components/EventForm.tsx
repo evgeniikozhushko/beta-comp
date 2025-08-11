@@ -55,7 +55,7 @@ export default function EventForm({ facilities }: Props) {
         <Input
           id="date"
           name="date"
-          type="date"
+          type="datetime-local"
           required // must select a date
         />
       </div>
@@ -63,14 +63,14 @@ export default function EventForm({ facilities }: Props) {
       {/* DURATION */}
       <div>
         <label
-          htmlFor="durationMinutes"
+          htmlFor="durationDays"
           className="block text-sm font-medium mb-1"
         >
           Duration (days)
         </label>
         <Input
-          id="durationMinutes"
-          name="durationMinutes"
+          id="durationDays"
+          name="durationDays"
           type="number"
           min={1}
           required // ensure a duration is provided
@@ -128,7 +128,7 @@ export default function EventForm({ facilities }: Props) {
         <label className="block text-sm font-medium mb-1">Age Categories</label>
         <div className="space-y-1">
           {/* No client-side required, validated server-side */}
-          {["U12", "U18", "Open"].map((cat) => (
+          {["YD", "YC", "YB", "YA", "JR", "Open"].map((cat) => (
             <label key={cat} className="inline-flex items-center mr-4">
               <input
                 type="checkbox"
@@ -154,9 +154,9 @@ export default function EventForm({ facilities }: Props) {
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
         >
           <option value="">Choose one</option>
+          <option value="Mixed">Mixed</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
-          <option value="Mixed">Mixed</option>
         </select>
       </div>
 

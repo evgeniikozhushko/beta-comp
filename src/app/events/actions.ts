@@ -9,13 +9,34 @@ import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
 
+// Put these at the top of the file (below imports)
+// "YYYY-MM-DDTHH:mm" from <input type="datetime-local">
+function parseLocalDateTime(s: string): Date | null {
+  if (!s) return null;
+  const parts = s.split(/[-T:]/).map(Number); // [YYYY, MM, DD, HH, mm]
+  if (parts.length < 3) return null;
+  const [y, m, d, hh = 0, mm = 0] = parts;
+  const date = new Date(y, m - 1, d, hh, mm);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+
+// "YYYY-MM-DD" from <input type="date">
+function parseLocalDate(s: string): Date | null {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const dt = new Date(y, m - 1, d);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
 // Zod schema for validating event creation payload
 const EventCreateSchema = z.object({
-  name: z.string().min(1).trim(),
+  name: z.string().min(1, { message: "Please enter an event name." }).trim(),
   date: z
     .string()
     .refine((d) => !isNaN(Date.parse(d)), { message: "Invalid date format" }),
-  durationMinutes: z.number().min(1),
+  durationDays: z.coerce.number().int().min(1),
   facility: z.string().min(1),
   discipline: z.enum(["Boulder", "Lead", "Speed"]),
   ageCategories: z.array(z.string()).min(1),
@@ -23,8 +44,8 @@ const EventCreateSchema = z.object({
   imageUrl: z.string().url().optional(),
   description: z.string().optional(),
   registrationDeadline: z.string().optional(),
-  maxParticipants: z.number().min(1).optional(),
-  entryFee: z.number().min(0).optional(),
+  maxParticipants: z.coerce.number().int().min(1).optional(),
+  entryFee: z.coerce.number().min(0).optional(),
   contactEmail: z.string().email().optional(),
 });
 
@@ -52,7 +73,7 @@ export async function createEventAction(
   const raw: Record<string, any> = {
     name: formData.get("name") as string,
     date: formData.get("date") as string,
-    durationMinutes: Number(formData.get("durationMinutes")),
+    durationDays: Number(formData.get("durationDays")),
     facility: formData.get("facility") as string,
     discipline: formData.get("discipline") as string,
     ageCategories: formData.getAll("ageCategories") as string[],
@@ -93,19 +114,33 @@ export async function createEventAction(
     }
 
     // 5. Create event, converting to ObjectId where needed
+
+    // Explicitly parse the main event date (expects datetime-local)
+    const eventDate = parseLocalDateTime(data.date);
+    if (!eventDate) {
+      return { error: "Invalid date format.", pending: false };
+    }
+
+    // Optional registration deadline (likely <input type='date'>)
+    let regDeadline: Date | undefined;
+    if (data.registrationDeadline) {
+      const parsed = parseLocalDate(data.registrationDeadline);
+      if (!parsed)
+        return { error: "Invalid registration deadline.", pending: false };
+      regDeadline = parsed;
+    }
+
     await Event.create({
       name: data.name,
-      date: new Date(data.date),
-      durationMinutes: data.durationMinutes,
+      date: eventDate,
+      durationDays: data.durationDays,
       facility: new Types.ObjectId(data.facility),
       discipline: data.discipline,
       ageCategories: data.ageCategories,
       division: data.division,
       imageUrl: data.imageUrl,
       description: data.description,
-      registrationDeadline: data.registrationDeadline
-        ? new Date(data.registrationDeadline)
-        : undefined,
+      registrationDeadline: regDeadline,
       maxParticipants: data.maxParticipants,
       entryFee: data.entryFee,
       contactEmail: data.contactEmail,
@@ -117,8 +152,14 @@ export async function createEventAction(
     redirect("/events");
     return;
   } catch (err: any) {
+    // Re-throw redirect errors - they're not actually errors
+    if (err?.message?.includes('NEXT_REDIRECT')) {
+      throw err;
+    }
+    
     // Return any server/database error state
     console.error("Event creation failed:", err);
-    return { error: err.message || "Failed to create event", pending: false };
+    console.error("Error details:", JSON.stringify(err, null, 2));
+    return { error: `EVENT_CREATE_ERROR: ${err.message}` || "Failed to create event", pending: false };
   }
 }

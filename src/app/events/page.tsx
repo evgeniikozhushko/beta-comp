@@ -98,7 +98,7 @@ export default async function EventsPage() {
                 {/* Duration */}
                 <p>
                   <span className="font-medium">Duration:</span>{" "}
-                  {event.durationMinutes} minutes
+                  {event.durationDays} days
                 </p>
 
                 {/* Facility name, type-safe check */}

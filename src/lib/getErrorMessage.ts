@@ -31,6 +31,10 @@ export function getErrorMessage(error: string | Error): string {
         return "Something unexpected happened. Please refresh and try again.";
   
       default:
+        // Show actual error for debugging if it starts with EVENT_CREATE_ERROR
+        if (code.startsWith("EVENT_CREATE_ERROR:")) {
+          return code.replace("EVENT_CREATE_ERROR: ", "Database error: ");
+        }
         // Fallback for any un-coded error
         return "Something went wrong. Please try again.";
     }

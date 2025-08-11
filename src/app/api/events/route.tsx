@@ -17,7 +17,7 @@ const EventCreateSchema = z.object({
   date: z.string().refine((d) => !isNaN(Date.parse(d)), {  // parseable date
     message: "Invalid date format",
   }),
-  durationMinutes: z.number().min(1),                      // at least 1 minute
+  durationDays: z.number().min(1),                      // at least 1 minute
   facility: z.string().min(1),                             // facility ObjectId as string
   discipline: z.enum(["Boulder", "Lead", "Speed"]),        // one of three values
   ageCategories: z.array(z.string()).min(1),               // at least one bracket
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     const newEvent = await Event.create({
       name: data.name,
       date: new Date(data.date),
-      durationMinutes: data.durationMinutes,
+      durationDays: data.durationDays,
       facility: new Types.ObjectId(data.facility),
       discipline: data.discipline,
       ageCategories: data.ageCategories,
