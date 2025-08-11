@@ -35,7 +35,7 @@ const EventCreateSchema = z.object({
 // ─────────────────────────────────────────────────────────────────────────────
 // GET handler: fetch all events from MongoDB
 // ─────────────────────────────────────────────────────────────────────────────
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Ensure database connection is ready
     await mongoConnect();
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
     // Return the events list and a total count
     return NextResponse.json({ events, total: events.length });
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Log the error server‐side for debugging
     console.error("Events GET error:", err);
 
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     data = EventCreateSchema.parse(body);
-  } catch (err: any) {
+  } catch (err: unknown) {
     // If validation fails, send a 400 with the Zod error message
     const msg = err instanceof Error ? err.message : "Invalid input";
     return NextResponse.json({ error: msg }, { status: 400 });
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
 
     // Return 201 Created with the new event payload
     return NextResponse.json({ event: populated }, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Log and return any creation errors
     console.error("Events POST error:", err);
     const message = err instanceof Error ? err.message : "Failed to create event";

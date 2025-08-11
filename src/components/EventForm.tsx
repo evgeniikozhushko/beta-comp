@@ -1,7 +1,6 @@
 // src/components/EventForm.tsx
 "use client";
 
-import { useFormState } from "react-dom";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { createEventAction } from "@/app/events/actions";
 import { Input } from "@/components/ui/input";

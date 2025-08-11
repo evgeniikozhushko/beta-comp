@@ -59,7 +59,7 @@ type EventCreateInput = z.infer<typeof EventCreateSchema>;
  */
 
 export async function createEventAction(
-  prevState: any,
+  prevState: unknown,
   formData: FormData
 ): Promise<{ error: string; pending: false } | void> {
   // 1. Auth guard
@@ -70,7 +70,7 @@ export async function createEventAction(
   }
 
   // 2. Extract raw values from form
-  const raw: Record<string, any> = {
+  const raw: Record<string, unknown> = {
     name: formData.get("name") as string,
     date: formData.get("date") as string,
     durationDays: Number(formData.get("durationDays")),
@@ -100,9 +100,10 @@ export async function createEventAction(
   try {
     // 3. Validate input with Zod
     data = EventCreateSchema.parse(raw);
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Return validation error state
-    return { error: err.message || "Invalid input", pending: false };
+    const message = err instanceof Error ? err.message : "Invalid input";
+    return { error: message, pending: false };
   }
 
   try {
@@ -151,15 +152,16 @@ export async function createEventAction(
     revalidatePath("/events");
     redirect("/events");
     return;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Re-throw redirect errors - they're not actually errors
-    if (err?.message?.includes('NEXT_REDIRECT')) {
+    if (err instanceof Error && err.message?.includes('NEXT_REDIRECT')) {
       throw err;
     }
     
     // Return any server/database error state
     console.error("Event creation failed:", err);
     console.error("Error details:", JSON.stringify(err, null, 2));
-    return { error: `EVENT_CREATE_ERROR: ${err.message}` || "Failed to create event", pending: false };
+    const message = err instanceof Error ? err.message : "Failed to create event";
+    return { error: `EVENT_CREATE_ERROR: ${message}`, pending: false };
   }
 }

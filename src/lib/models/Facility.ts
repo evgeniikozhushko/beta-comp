@@ -1,4 +1,4 @@
-import { Schema, Document, model, models, Types } from "mongoose";
+import { Schema, Document, model, models } from "mongoose";
 
 export interface IFacility extends Document {
   name: string;

@@ -4,7 +4,7 @@ import EventForm from "@/components/EventForm";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { mongoConnect } from "@/lib/mongodb";
-import Event, { IEvent } from "@/lib/models/Event";
+import Event from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 
 /**
@@ -25,7 +25,7 @@ export default async function EventsPage() {
     redirect("/sign-in");
   }
 
-  let rawEvents: (IEvent & { facility: any })[], rawFacilities: any[];
+  let rawEvents: unknown[], rawFacilities: unknown[];
   try {
     // 2. Connect to MongoDB
     await mongoConnect();
@@ -35,7 +35,7 @@ export default async function EventsPage() {
       Event.find()
         .populate("facility") // Replace facility ID with full document
         .sort({ date: 1 }) // Sort events by date ascending
-        .lean<(IEvent & { facility: any })[]>(), // Convert Mongoose docs to plain JS objects with proper typing
+        .lean(), // Convert Mongoose docs to plain JS objects
       Facility.find().lean(), // Fetch all facilities
     ]);
   } catch (error) {
@@ -54,7 +54,8 @@ export default async function EventsPage() {
   }
 
   // 5. Map facilities with location info for the dropdown in EventForm
-  const facilities = rawFacilities.map((f) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const facilities = rawFacilities.map((f: any) => ({
     id: f._id.toString(), // Convert ObjectId to string
     name: f.city ? `${f.name} — ${f.city}, ${f.province}` : `${f.name} — ${f.province}`, // Include location
   }));
@@ -75,7 +76,8 @@ export default async function EventsPage() {
         <p className="text-gray-600">No events found.</p>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {rawEvents.map((event) => (
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {rawEvents.map((event: any) => (
             <div
               key={String(event._id)}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow"
