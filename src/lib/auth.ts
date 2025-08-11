@@ -129,10 +129,16 @@ export async function signOut(): Promise<void> {
  * @returns Google OAuth authorization URL
  */
 export function getGoogleAuthUrl(): string {
+  // Determine the app URL based on environment
+  const appUrl =
+    process.env.NEXTAUTH_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://beta-comp.onrender.com"
+      : "http://localhost:3000");
+
   // The URL where Google will redirect after authorization
-  const redirectUri = `${
-    process.env.NEXTAUTH_URL || "http://localhost:3000"
-  }/api/auth/google/callback`;
+  const redirectUri = `${appUrl}/api/auth/google/callback`;
 
   // Scopes we're requesting from Google
   const scope = "email profile";
@@ -170,7 +176,11 @@ export async function handleGoogleCallback(code: string): Promise<User> {
       code, // The authorization code from Google
       grant_type: "authorization_code",
       redirect_uri: `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
+        process.env.NEXTAUTH_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://beta-comp.onrender.com"
+          : "http://localhost:3000")
       }/api/auth/google/callback`,
     }),
   });
