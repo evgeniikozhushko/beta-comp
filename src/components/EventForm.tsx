@@ -37,6 +37,11 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
   const formRef = useRef<HTMLFormElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
+  // Handy alias for accessing submitted values on error
+  const v = (formState && 'values' in formState ? (formState as any).values : undefined) as
+    | Record<string, any>
+    | undefined;
+
   // when pending changes, notify Sheet
   useEffect(() => {
     onPendingChange?.(!!formState?.pending);
@@ -66,6 +71,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           ref={nameRef}
           placeholder="e.g. Boulder Bash 2025"
           required // client-side required validation
+          defaultValue={v?.name ?? ""}
         />
       </div>
 
@@ -79,6 +85,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="date"
           type="datetime-local"
           required // must select a date
+          defaultValue={v?.date ?? ""}
         />
       </div>
 
@@ -96,6 +103,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           type="number"
           min={1}
           required // ensure a duration is provided
+          defaultValue={v?.durationDays ?? ""}
         />
       </div>
 
@@ -116,6 +124,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
             name="facility"
             required // client must choose a facility
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+            defaultValue={v?.facility ?? ""}
           >
             <option value="">Select a facility</option>
             {facilities.map((f) => (
@@ -137,6 +146,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="discipline"
           required
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+          defaultValue={v?.discipline ?? ""}
         >
           <option value="">Choose one</option>
           <option value="Boulder">Boulder</option>
@@ -157,6 +167,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
                 name="ageCategories"
                 value={cat}
                 className="mr-2"
+                defaultChecked={Array.isArray(v?.ageCategories) && v!.ageCategories.includes(cat)}
               />
               {cat}
             </label>
@@ -174,6 +185,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="division"
           required
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+          defaultValue={v?.division ?? ""}
         >
           <option value="">Choose one</option>
           <option value="Mixed">Mixed</option>
@@ -192,6 +204,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="description"
           rows={3}
           className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
+          defaultValue={v?.description ?? ""}
         />
       </div>
 
@@ -206,6 +219,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           id="registrationDeadline"
           name="registrationDeadline"
           type="date"
+          defaultValue={v?.registrationDeadline ?? ""}
         />
       </div>
 
@@ -221,6 +235,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="maxParticipants"
           type="number"
           min={1}
+          defaultValue={v?.maxParticipants ?? ""}
         />
       </div>
 
@@ -234,6 +249,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           type="number"
           min={0}
           step="0.01"
+          defaultValue={v?.entryFee ?? ""}
         />
       </div>
 
@@ -244,14 +260,14 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
         >
           Contact Email (optional)
         </label>
-        <Input id="contactEmail" name="contactEmail" type="email" />
+        <Input id="contactEmail" name="contactEmail" type="email" defaultValue={v?.contactEmail ?? ""} />
       </div>
 
       <div>
         <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
           Image URL (optional)
         </label>
-        <Input id="imageUrl" name="imageUrl" type="url" />
+        <Input id="imageUrl" name="imageUrl" type="url" defaultValue={v?.imageUrl ?? ""} />
       </div>
 
       {/* SERVER ERROR BANNER */}

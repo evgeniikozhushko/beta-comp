@@ -11,7 +11,14 @@ import { auth } from "@/lib/auth";
 // Return shape for useActionState
 export type CreateEventState =
   | { pending: false; success: true; id: string; name: string }
-  | { pending: false; success?: false; error?: string; fieldErrors?: Record<string, string> };
+  | {
+      pending: false;
+      success?: false;
+      error?: string;
+      fieldErrors?: Record<string, string>;
+      // NEW: echo back what the user submitted so the client can rehydrate fields
+      values?: Record<string, any>;
+    };
 
 // Zod schema for validating event creation payload
 const EventCreateSchema = z.object({
@@ -72,9 +79,9 @@ export async function createEventAction(
       const fieldErrors = Object.fromEntries(
         Object.entries(flat.fieldErrors).map(([k, v]) => [k, (v as string[])?.[0] ?? "Invalid value"])
       );
-      return { pending: false, error: "VALIDATION_REQUIRED", fieldErrors };
+      return { pending: false, error: "VALIDATION_REQUIRED", fieldErrors, values: raw };
     }
-    return { pending: false, error: "UNEXPECTED_SERVER" };
+    return { pending: false, error: "UNEXPECTED_SERVER", values: raw };
   }
 
   try {
@@ -86,6 +93,7 @@ export async function createEventAction(
         pending: false,
         error: "INVALID_FACILITY",
         fieldErrors: { facility: "Please select a valid facility." },
+        values: raw,
       };
     }
 
@@ -114,6 +122,6 @@ export async function createEventAction(
     return { pending: false, success: true, id: newEvent._id.toString(), name: newEvent.name };
   } catch (err) {
     console.error("Event creation failed:", err);
-    return { pending: false, error: "DB_ERROR" };
+    return { pending: false, error: "DB_ERROR", values: raw };
   }
 }

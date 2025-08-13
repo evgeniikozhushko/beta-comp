@@ -51,7 +51,7 @@ export default function CreateEventSheet({ facilities }: Props) {
 
       <SheetContent
         side="left"
-        className="max-w-lg w-full"
+        className="max-w-lg w-full overflow-y-auto px-10"
         onEscapeKeyDown={(e) => pending && e.preventDefault()}
         onPointerDownOutside={(e) => pending && e.preventDefault()}
         onInteractOutside={(e) => pending && e.preventDefault()}
@@ -65,7 +65,7 @@ export default function CreateEventSheet({ facilities }: Props) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-4 p-10">
+        <div className="mt-4 p-6">
           <EventForm
             facilities={facilities}
             resetOnSuccess
