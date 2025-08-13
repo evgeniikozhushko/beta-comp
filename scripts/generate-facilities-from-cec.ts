@@ -118,7 +118,7 @@ async function main() {
       // Check if this element is a province heading
       const maybeProvince = canonicalProvince(txt);
       if (maybeProvince) {
-        currentProvince = maybeProvince;
+        currentProvince = maybeProvince;  
         console.log(`[generator] Processing ${currentProvince}...`);
         
         // Look at next siblings for facility listings

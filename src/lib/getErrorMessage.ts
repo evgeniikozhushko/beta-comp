@@ -22,6 +22,12 @@ export function getErrorMessage(error: string | Error): string {
       // Sign-in specific
       case "INVALID_CREDENTIALS":
         return "Invalid email or password. Please try again.";
+      
+      // Event creation specific
+      case "UNAUTHORIZED":
+        return "You must be signed in to create events.";
+      case "INVALID_FACILITY":
+        return "Please select a valid facility.";
   
       // System / server
       case "DB_ERROR":

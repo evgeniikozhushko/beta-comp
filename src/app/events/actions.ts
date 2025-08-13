@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Types } from "mongoose";
@@ -9,131 +8,91 @@ import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
 
-// Put these at the top of the file (below imports)
-// "YYYY-MM-DDTHH:mm" from <input type="datetime-local">
-function parseLocalDateTime(s: string): Date | null {
-  if (!s) return null;
-  const parts = s.split(/[-T:]/).map(Number); // [YYYY, MM, DD, HH, mm]
-  if (parts.length < 3) return null;
-  const [y, m, d, hh = 0, mm = 0] = parts;
-  const date = new Date(y, m - 1, d, hh, mm);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-
-// "YYYY-MM-DD" from <input type="date">
-function parseLocalDate(s: string): Date | null {
-  if (!s) return null;
-  const [y, m, d] = s.split("-").map(Number);
-  if (!y || !m || !d) return null;
-  const dt = new Date(y, m - 1, d);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
+// Return shape for useActionState
+export type CreateEventState =
+  | { pending: false; success: true; id: string; name: string }
+  | { pending: false; success?: false; error?: string; fieldErrors?: Record<string, string> };
 
 // Zod schema for validating event creation payload
 const EventCreateSchema = z.object({
-  name: z.string().min(1, { message: "Please enter an event name." }).trim(),
-  date: z
-    .string()
-    .refine((d) => !isNaN(Date.parse(d)), { message: "Invalid date format" }),
-  durationDays: z.coerce.number().int().min(1),
-  facility: z.string().min(1),
-  discipline: z.enum(["Boulder", "Lead", "Speed"]),
-  ageCategories: z.array(z.string()).min(1),
-  division: z.enum(["Male", "Female", "Mixed"]),
+  name: z.string().min(1, "Please enter a name").trim(),
+  date: z.string().refine((d) => !isNaN(Date.parse(d)), { message: "Please select a valid date" }),
+  durationDays: z.number().min(1, "Duration must be at least 1 day"),
+  facility: z.string().min(1, "Please select a facility"),
+  discipline: z.enum(["Boulder", "Lead", "Speed"], { message: "Choose a discipline" }),
+  ageCategories: z.array(z.string()).min(1, "Pick at least one category"),
+  division: z.enum(["Male", "Female", "Mixed"], { message: "Choose a division" }),
   imageUrl: z.string().url().optional(),
   description: z.string().optional(),
   registrationDeadline: z.string().optional(),
-  maxParticipants: z.coerce.number().int().min(1).optional(),
-  entryFee: z.coerce.number().min(0).optional(),
-  contactEmail: z.string().email().optional(),
+  maxParticipants: z.number().min(1).optional(),
+  entryFee: z.number().min(0).optional(),
+  contactEmail: z.string().email("That doesn't look like an email").optional(),
 });
 
-type EventCreateInput = z.infer<typeof EventCreateSchema>;
-
-/**
- * Server action compatible with useFormState:
- * - accepts previous state and formData
- * - returns error state object on failure
- * - uses revalidatePath and redirect on success
- */
-
 export async function createEventAction(
-  prevState: unknown,
+  _prevState: unknown,
   formData: FormData
-): Promise<{ error: string; pending: false } | void> {
-  // 1. Auth guard
+): Promise<CreateEventState> {
+  // 1. Auth guard (no redirect here—return an error for the form)
   const session = await auth();
   if (!session) {
-    redirect("/sign-in");
-    return;
+    return { pending: false, error: "UNAUTHORIZED" };
   }
 
-  // 2. Extract raw values from form
-  const raw: Record<string, unknown> = {
-    name: formData.get("name") as string,
-    date: formData.get("date") as string,
+  // 2. Extract and normalize raw data from FormData
+  const raw: Record<string, any> = {
+    name: formData.get("name"),
+    date: formData.get("date"),
     durationDays: Number(formData.get("durationDays")),
-    facility: formData.get("facility") as string,
-    discipline: formData.get("discipline") as string,
-    ageCategories: formData.getAll("ageCategories") as string[],
-    division: formData.get("division") as string,
-    imageUrl: (formData.get("imageUrl") as string) || undefined,
-    description: (formData.get("description") as string) || undefined,
-    registrationDeadline:
-      (formData.get("registrationDeadline") as string) || undefined,
+    facility: formData.get("facility"),
+    discipline: formData.get("discipline"),
+    ageCategories: formData.getAll("ageCategories"),
+    division: formData.get("division"),
+    imageUrl: formData.get("imageUrl") || undefined,
+    description: formData.get("description") || undefined,
+    registrationDeadline: formData.get("registrationDeadline") || undefined,
     maxParticipants: formData.get("maxParticipants")
       ? Number(formData.get("maxParticipants"))
       : undefined,
-    entryFee: formData.get("entryFee")
-      ? Number(formData.get("entryFee"))
-      : undefined,
-    contactEmail: (formData.get("contactEmail") as string) || undefined,
+    entryFee: formData.get("entryFee") ? Number(formData.get("entryFee")) : undefined,
+    contactEmail: formData.get("contactEmail") || undefined,
   };
 
-  // Remove any empty-string fields to prevent invalid optional data
-  Object.entries(raw).forEach(([key, value]) => {
-    if (value === "") raw[key] = undefined;
-  });
+  // Remove empty strings → undefined (so Zod optional fields behave)
+  for (const [k, v] of Object.entries(raw)) if (v === "") raw[k] = undefined;
 
-  let data: EventCreateInput;
+  // 3. Zod validation → map to fieldErrors for inline display
+  let data: z.infer<typeof EventCreateSchema>;
   try {
-    // 3. Validate input with Zod
     data = EventCreateSchema.parse(raw);
-  } catch (err: unknown) {
-    // Return validation error state
-    const message = err instanceof Error ? err.message : "Invalid input";
-    return { error: message, pending: false };
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      const flat = err.flatten();
+      const fieldErrors = Object.fromEntries(
+        Object.entries(flat.fieldErrors).map(([k, v]) => [k, (v as string[])?.[0] ?? "Invalid value"])
+      );
+      return { pending: false, error: "VALIDATION_REQUIRED", fieldErrors };
+    }
+    return { pending: false, error: "UNEXPECTED_SERVER" };
   }
 
   try {
-    // 4. Ensure facility exists
+    // 4. DB: verify facility exists
     await mongoConnect();
     const facilityDoc = await Facility.findById(data.facility);
     if (!facilityDoc) {
-      return { error: "Invalid facility selected", pending: false };
+      return {
+        pending: false,
+        error: "INVALID_FACILITY",
+        fieldErrors: { facility: "Please select a valid facility." },
+      };
     }
 
-    // 5. Create event, converting to ObjectId where needed
-
-    // Explicitly parse the main event date (expects datetime-local)
-    const eventDate = parseLocalDateTime(data.date);
-    if (!eventDate) {
-      return { error: "Invalid date format.", pending: false };
-    }
-
-    // Optional registration deadline (likely <input type='date'>)
-    let regDeadline: Date | undefined;
-    if (data.registrationDeadline) {
-      const parsed = parseLocalDate(data.registrationDeadline);
-      if (!parsed)
-        return { error: "Invalid registration deadline.", pending: false };
-      regDeadline = parsed;
-    }
-
-    await Event.create({
+    // 5. Create event (convert string ids → ObjectId)
+    const newEvent = await Event.create({
       name: data.name,
-      date: eventDate,
+      date: new Date(data.date),
       durationDays: data.durationDays,
       facility: new Types.ObjectId(data.facility),
       discipline: data.discipline,
@@ -141,27 +100,20 @@ export async function createEventAction(
       division: data.division,
       imageUrl: data.imageUrl,
       description: data.description,
-      registrationDeadline: regDeadline,
+      registrationDeadline: data.registrationDeadline ? new Date(data.registrationDeadline) : undefined,
       maxParticipants: data.maxParticipants,
       entryFee: data.entryFee,
       contactEmail: data.contactEmail,
       createdBy: new Types.ObjectId(session.user.id),
     } as Partial<IEvent>);
 
-    // 6. Revalidate and redirect
+    // 6. Mark the /events route stale (fresh data will be ready)
     revalidatePath("/events");
-    redirect("/events");
-    return;
-  } catch (err: unknown) {
-    // Re-throw redirect errors - they're not actually errors
-    if (err instanceof Error && err.message?.includes('NEXT_REDIRECT')) {
-      throw err;
-    }
-    
-    // Return any server/database error state
+
+    // 7. Return success (no redirect) → client decides what to do
+    return { pending: false, success: true, id: newEvent._id.toString(), name: newEvent.name };
+  } catch (err) {
     console.error("Event creation failed:", err);
-    console.error("Error details:", JSON.stringify(err, null, 2));
-    const message = err instanceof Error ? err.message : "Failed to create event";
-    return { error: `EVENT_CREATE_ERROR: ${message}`, pending: false };
+    return { pending: false, error: "DB_ERROR" };
   }
 }

@@ -1,6 +1,6 @@
 // src/app/events/page.tsx
 
-import EventForm from "@/components/EventForm";
+import CreateEventSheet from "@/components/CreateEventSheet";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { mongoConnect } from "@/lib/mongodb";
@@ -17,6 +17,7 @@ import Facility from "@/lib/models/Facility";
  * 4. Displays the list of existing events with detailed info.
  * 5. Handles database errors gracefully with an error banner.
  */
+
 export default async function EventsPage() {
   // 1. Authentication guard: redirect unauthenticated users
   const session = await auth();
@@ -66,9 +67,9 @@ export default async function EventsPage() {
       {/* Page title */}
       <h1 className="text-3xl font-bold mb-6">Events</h1>
 
-      {/* Event creation form */}
-      <div className="mb-12">
-        <EventForm facilities={facilities} />
+      {/* Event creation sheet */}
+      <div className="mb-6">
+        <CreateEventSheet facilities={facilities} />
       </div>
 
       {/* Event list or no-data message */}

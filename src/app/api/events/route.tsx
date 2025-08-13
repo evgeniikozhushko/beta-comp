@@ -17,7 +17,7 @@ const EventCreateSchema = z.object({
   date: z.string().refine((d) => !isNaN(Date.parse(d)), {  // parseable date
     message: "Invalid date format",
   }),
-  durationDays: z.number().min(1),                      // at least 1 minute
+  durationDays: z.number().min(1),                          // at least 1 day
   facility: z.string().min(1),                             // facility ObjectId as string
   discipline: z.enum(["Boulder", "Lead", "Speed"]),        // one of three values
   ageCategories: z.array(z.string()).min(1),               // at least one bracket

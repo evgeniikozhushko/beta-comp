@@ -5,7 +5,7 @@ import { getErrorMessage } from "@/lib/getErrorMessage";
 import { createEventAction } from "@/app/events/actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 interface FacilityOption {
   id: string;
@@ -14,6 +14,9 @@ interface FacilityOption {
 
 interface Props {
   facilities: FacilityOption[];
+  resetOnSuccess?: boolean;
+  onPendingChange?: (pending: boolean) => void;
+  onSuccess?: (id: string, name: string) => void;
 }
 
 
@@ -24,15 +27,34 @@ interface Props {
  * Uses server-action createEventAction via useFormState for submission,
  * and displays client-side and server-side validation.
  */
-export default function EventForm({ facilities }: Props) {
+export default function EventForm({ facilities, resetOnSuccess = true, onPendingChange, onSuccess }: Props) {
   // Initialize form state with default values for error and pending
   const [formState, formAction] = useActionState(createEventAction, {
     error: "",
     pending: false,
   });
+  
+  const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  // when pending changes, notify Sheet
+  useEffect(() => {
+    onPendingChange?.(!!formState?.pending);
+  }, [formState?.pending, onPendingChange]);
+
+  // on success: reset + focus + notify Sheet
+  useEffect(() => {
+    if (formState && "success" in formState && formState.success) {
+      onSuccess?.(formState.id, formState.name);
+      if (resetOnSuccess && formRef.current) {
+        formRef.current.reset();
+        nameRef.current?.focus();
+      }
+    }
+  }, [formState, onSuccess, resetOnSuccess]);
 
   return (
-    <form action={formAction} className="space-y-4 max-w-lg" noValidate>
+    <form ref={formRef} action={formAction} className="space-y-4 max-w-lg" noValidate>
       {/* NAME */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
@@ -41,6 +63,7 @@ export default function EventForm({ facilities }: Props) {
         <Input
           id="name"
           name="name"
+          ref={nameRef}
           placeholder="e.g. Boulder Bash 2025"
           required // client-side required validation
         />
@@ -232,10 +255,17 @@ export default function EventForm({ facilities }: Props) {
       </div>
 
       {/* SERVER ERROR BANNER */}
-      {formState?.error && (
-        <p className="text-center text-sm text-red-600">
-          {getErrorMessage(formState.error)}
-        </p>
+      {formState && "error" in formState && formState.error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2" role="alert">
+          <p className="text-red-800 text-sm">{getErrorMessage(formState.error)}</p>
+        </div>
+      )}
+
+      {/* SUCCESS BANNER */}
+      {formState && "success" in formState && formState.success && (
+        <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-2" role="status" aria-live="polite">
+          <p className="text-green-800 text-sm">✅ Event created successfully! Add another below.</p>
+        </div>
       )}
 
       {/* SUBMIT BUTTON */}
