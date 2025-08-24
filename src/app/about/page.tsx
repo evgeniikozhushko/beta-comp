@@ -41,7 +41,7 @@ export default function AboutPage() {
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
+            className="rounded-md border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-8 sm:h-8 px-4 sm:px-5 sm:w-auto"
             href="#"
             // target="_blank"
             rel="noopener noreferrer"
@@ -56,7 +56,7 @@ export default function AboutPage() {
             Start now
           </a>
           <Link
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
+            className="rounded-md border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-8 sm:h-8 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
             href="/"
           >
             ← Home
@@ -64,7 +64,9 @@ export default function AboutPage() {
         </div>
       </main>
 
+      {/* Footer Links */}
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
+        {/* Learn Link */}
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
           href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
@@ -78,8 +80,10 @@ export default function AboutPage() {
             width={16}
             height={16}
           />
-          Learn
+          NextJS
         </a>
+        
+        {/* Examples Link */}
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
           href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
@@ -93,11 +97,13 @@ export default function AboutPage() {
             width={16}
             height={16}
           />
-          Examples
+          Versel
         </a>
+        
+        {/* Evgenii.ca */}
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          href="https://www.evgenii.ca/"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -108,7 +114,7 @@ export default function AboutPage() {
             width={16}
             height={16}
           />
-          Go to nextjs.org →
+          evgenii.ca →
         </a>
       </footer>
     </div>
