@@ -35,12 +35,12 @@ export default async function Home() {
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         {/* Application Logo/Title */}
-        <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+        <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded text-2xl font-[family-name:var(--font-geist-mono)] font-semibold">
           beta comp
         </code>
         
         {/* Welcome Message */}
-        <div className="text-center">
+        <div className="text-start">
           <p className="text-lg">Welcome, {session.user.displayName}!</p>
           <p className="text-sm text-muted-foreground">{session.user.email}</p>
         </div>
@@ -51,7 +51,7 @@ export default async function Home() {
           <li className="mb-2 tracking-[-.01em]">
             {" "}
             <Link href="/events">
-              <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+              <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200">
                 Event management
               </code>
             </Link>
@@ -60,7 +60,7 @@ export default async function Home() {
           {/* Athlete Database */}
           <li className="mb-2 tracking-[-.01em]">
             {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200">
               Athlete database
             </code>
           </li>
@@ -68,7 +68,7 @@ export default async function Home() {
           {/* Live Scoring */}
           <li className="mb-2 tracking-[-.01em]">
             {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200">
               Live scoring
             </code>
           </li>
@@ -76,7 +76,7 @@ export default async function Home() {
           {/* Custom Features */}
           <li className="tracking-[-.01em]">
             {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200">
               Custom
             </code>
           </li>
@@ -141,7 +141,7 @@ export default async function Home() {
             width={16}
             height={16}
           />
-          Learn
+          NextJS
         </a>
         
         {/* Examples Link */}
@@ -158,13 +158,13 @@ export default async function Home() {
             width={16}
             height={16}
           />
-          Examples
+          Versel
         </a>
         
-        {/* Next.js Link */}
+        {/* Evgenii.ca */}
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+          href="https://www.evgenii.ca/"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -175,7 +175,7 @@ export default async function Home() {
             width={16}
             height={16}
           />
-          Go to nextjs.org →
+          evgenii.ca →
         </a>
       </footer>
     </div>

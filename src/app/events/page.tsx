@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { mongoConnect } from "@/lib/mongodb";
 import Event from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
+import DeleteEventButton from "@/components/DeleteEventButton";
 
 /**
  * EventsPage
@@ -58,7 +59,9 @@ export default async function EventsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const facilities = rawFacilities.map((f: any) => ({
     id: f._id.toString(), // Convert ObjectId to string
-    name: f.city ? `${f.name} — ${f.city}, ${f.province}` : `${f.name} — ${f.province}`, // Include location
+    name: f.city
+      ? `${f.name} — ${f.city}, ${f.province}`
+      : `${f.name} — ${f.province}`, // Include location
   }));
 
   // 6. Render the page: form + event list
@@ -81,8 +84,15 @@ export default async function EventsPage() {
           {rawEvents.map((event: any) => (
             <div
               key={String(event._id)}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow"
-            >
+              className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 pb-20 hover:shadow-lg transition-shadow relative"            >
+              {/* Delete button */}
+              <div className="absolute bottom-6 left-4">
+                <DeleteEventButton
+                  eventId={event._id.toString()}
+                  eventName={event.name}
+                />
+              </div>
+
               {/* Event title */}
               <h2 className="text-xl font-semibold mb-2">{event.name}</h2>
 

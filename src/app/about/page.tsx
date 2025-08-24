@@ -13,27 +13,27 @@ export default function AboutPage() {
           height={38}
           priority
         /> */}
-        <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+        <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded text-2xl font-[family-name:var(--font-geist-mono)] font-semibold">
           About page
         </code>
         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2 tracking-[-.01em]">
             {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200">
               How it works
             </code>
           </li>
 
           <li className="mb-2 tracking-[-.01em]">
             {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200">
               Features
             </code>
           </li>
 
            <li className="mb-2 tracking-[-.01em]">
             {" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold hover:bg-[#111111] hover:text-white transition-colors duration-200s">
               Provide feedback
             </code>
           </li>
