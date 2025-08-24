@@ -2,7 +2,7 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/getErrorMessage";
-import { createEventAction } from "@/app/events/actions";
+import { createEventAction, updateEventAction } from "@/app/events/actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useActionState, useEffect, useRef } from "react";
@@ -12,8 +12,27 @@ interface FacilityOption {
   name: string;
 }
 
+interface EventData {
+  id: string;
+  name: string;
+  date: string;
+  durationDays: number;
+  facility: string;
+  discipline: string;
+  ageCategories: string[];
+  division: string;
+  description?: string;
+  registrationDeadline?: string;
+  maxParticipants?: number;
+  entryFee?: number;
+  contactEmail?: string;
+  imageUrl?: string;
+}
+
 interface Props {
   facilities: FacilityOption[];
+  mode?: "create" | "update";
+  eventData?: EventData;
   resetOnSuccess?: boolean;
   onPendingChange?: (pending: boolean) => void;
   onSuccess?: (id: string, name: string) => void;
@@ -23,13 +42,30 @@ interface Props {
 /**
  * EventForm
  *
- * Renders a form for creating new events.
- * Uses server-action createEventAction via useFormState for submission,
+ * Renders a form for creating or updating events.
+ * Uses server-action createEventAction or updateEventAction via useFormState for submission,
  * and displays client-side and server-side validation.
  */
-export default function EventForm({ facilities, resetOnSuccess = true, onPendingChange, onSuccess }: Props) {
+// Helper function to format date for datetime-local input
+function formatDateForInput(dateString?: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  // Format as YYYY-MM-DDTHH:mm for datetime-local input
+  return date.toISOString().slice(0, 16);
+}
+
+export default function EventForm({ 
+  facilities, 
+  mode = "create", 
+  eventData, 
+  resetOnSuccess = true, 
+  onPendingChange, 
+  onSuccess 
+}: Props) {
   // Initialize form state with default values for error and pending
-  const [formState, formAction] = useActionState(createEventAction, {
+  const action = mode === "create" ? createEventAction : updateEventAction;
+  const [formState, formAction] = useActionState(action, {
     error: "",
     pending: false,
   });
@@ -37,8 +73,9 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
   const formRef = useRef<HTMLFormElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // Handy alias for accessing submitted values on error
+  // Handy alias for accessing submitted values on error or initial event data
   const v = (formState && 'values' in formState ? (formState as { values: Record<string, unknown> }).values : undefined);
+  const initialValues = eventData || {} as EventData;
 
   // when pending changes, notify Sheet
   useEffect(() => {
@@ -58,6 +95,10 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4 max-w-lg" noValidate>
+      {/* Hidden field for event ID when updating */}
+      {mode === "update" && eventData && (
+        <input type="hidden" name="eventId" value={eventData.id} />
+      )}
       {/* NAME */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
@@ -69,7 +110,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           ref={nameRef}
           placeholder="e.g. Boulder Bash 2025"
           required // client-side required validation
-          defaultValue={typeof v?.name === 'string' ? v.name : ""}
+          defaultValue={typeof v?.name === 'string' ? v.name : initialValues.name || ""}
         />
       </div>
 
@@ -83,7 +124,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="date"
           type="datetime-local"
           required // must select a date
-          defaultValue={typeof v?.date === 'string' ? v.date : ""}
+          defaultValue={typeof v?.date === 'string' ? v.date : formatDateForInput(initialValues.date)}
         />
       </div>
 
@@ -101,7 +142,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           type="number"
           min={1}
           required // ensure a duration is provided
-          defaultValue={typeof v?.durationDays === 'number' ? v.durationDays.toString() : ""}
+          defaultValue={typeof v?.durationDays === 'number' ? v.durationDays.toString() : initialValues.durationDays?.toString() || ""}
         />
       </div>
 
@@ -122,7 +163,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
             name="facility"
             required // client must choose a facility
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
-            defaultValue={typeof v?.facility === 'string' ? v.facility : ""}
+            defaultValue={typeof v?.facility === 'string' ? v.facility : initialValues.facility || ""}
           >
             <option value="">Select a facility</option>
             {facilities.map((f) => (
@@ -144,7 +185,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="discipline"
           required
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
-          defaultValue={typeof v?.discipline === 'string' ? v.discipline : ""}
+          defaultValue={typeof v?.discipline === 'string' ? v.discipline : initialValues.discipline || ""}
         >
           <option value="">Choose one</option>
           <option value="Boulder">Boulder</option>
@@ -165,7 +206,10 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
                 name="ageCategories"
                 value={cat}
                 className="mr-2"
-                defaultChecked={Array.isArray(v?.ageCategories) && v.ageCategories.includes(cat)}
+                defaultChecked={
+                  (Array.isArray(v?.ageCategories) && v.ageCategories.includes(cat)) ||
+                  (Array.isArray(initialValues.ageCategories) && initialValues.ageCategories.includes(cat))
+                }
               />
               {cat}
             </label>
@@ -183,7 +227,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="division"
           required
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
-          defaultValue={typeof v?.division === 'string' ? v.division : ""}
+          defaultValue={typeof v?.division === 'string' ? v.division : initialValues.division || ""}
         >
           <option value="">Choose one</option>
           <option value="Mixed">Mixed</option>
@@ -202,7 +246,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="description"
           rows={3}
           className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
-          defaultValue={typeof v?.description === 'string' ? v.description : ""}
+          defaultValue={typeof v?.description === 'string' ? v.description : initialValues.description || ""}
         />
       </div>
 
@@ -217,7 +261,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           id="registrationDeadline"
           name="registrationDeadline"
           type="date"
-          defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline : ""}
+          defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline : formatDateForInput(initialValues.registrationDeadline)}
         />
       </div>
 
@@ -233,7 +277,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           name="maxParticipants"
           type="number"
           min={1}
-          defaultValue={typeof v?.maxParticipants === 'number' ? v.maxParticipants.toString() : ""}
+          defaultValue={typeof v?.maxParticipants === 'number' ? v.maxParticipants.toString() : initialValues.maxParticipants?.toString() || ""}
         />
       </div>
 
@@ -247,7 +291,7 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
           type="number"
           min={0}
           step="0.01"
-          defaultValue={typeof v?.entryFee === 'number' ? v.entryFee.toString() : ""}
+          defaultValue={typeof v?.entryFee === 'number' ? v.entryFee.toString() : initialValues.entryFee?.toString() || ""}
         />
       </div>
 
@@ -258,14 +302,14 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
         >
           Contact Email (optional)
         </label>
-        <Input id="contactEmail" name="contactEmail" type="email" defaultValue={typeof v?.contactEmail === 'string' ? v.contactEmail : ""} />
+        <Input id="contactEmail" name="contactEmail" type="email" defaultValue={typeof v?.contactEmail === 'string' ? v.contactEmail : initialValues.contactEmail || ""} />
       </div>
 
       <div>
         <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
           Image URL (optional)
         </label>
-        <Input id="imageUrl" name="imageUrl" type="url" defaultValue={typeof v?.imageUrl === 'string' ? v.imageUrl : ""} />
+        <Input id="imageUrl" name="imageUrl" type="url" defaultValue={typeof v?.imageUrl === 'string' ? v.imageUrl : initialValues.imageUrl || ""} />
       </div>
 
       {/* SERVER ERROR BANNER */}
@@ -278,13 +322,16 @@ export default function EventForm({ facilities, resetOnSuccess = true, onPending
       {/* SUCCESS BANNER */}
       {formState && "success" in formState && formState.success && (
         <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-2" role="status" aria-live="polite">
-          <p className="text-green-800 text-sm">✅ Event created successfully! Add another below.</p>
+          <p className="text-green-800 text-sm">✅ Event {mode === "create" ? "created" : "updated"} successfully!{mode === "create" ? " Add another below." : ""}</p>
         </div>
       )}
 
       {/* SUBMIT BUTTON */}
       <Button type="submit" className="w-full" disabled={formState?.pending}>
-        {formState?.pending ? "Creating…" : "Create Event"}
+        {formState?.pending 
+          ? (mode === "create" ? "Creating…" : "Updating…") 
+          : (mode === "create" ? "Create Event" : "Update Event")
+        }
       </Button>
     </form>
   );
