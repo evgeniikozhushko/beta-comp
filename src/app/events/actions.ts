@@ -17,7 +17,7 @@ export type CreateEventState =
       error?: string;
       fieldErrors?: Record<string, string>;
       // NEW: echo back what the user submitted so the client can rehydrate fields
-      values?: Record<string, any>;
+      values?: Record<string, unknown>;
     };
 
 export type DeleteEventState =
@@ -58,7 +58,7 @@ export async function createEventAction(
   }
 
   // 2. Extract and normalize raw data from FormData
-  const raw: Record<string, any> = {
+  const raw: Record<string, unknown> = {
     name: formData.get("name"),
     date: formData.get("date"),
     durationDays: Number(formData.get("durationDays")),
