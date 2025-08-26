@@ -1,30 +1,29 @@
-// src/app/api/events/route.ts
-
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { mongoConnect } from "@/lib/mongodb";
 import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
 import { Types } from "mongoose";
+import { NextRequest, NextResponse } from "next/server";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1️⃣ Define a Zod schema to validate incoming event data
 //    This ensures both required and optional fields meet our criteria
 // ─────────────────────────────────────────────────────────────────────────────
 const EventCreateSchema = z.object({
-  name: z.string().min(1).trim(),                          // non-empty string
-  date: z.string().refine((d) => !isNaN(Date.parse(d)), {  // parseable date
+  name: z.string().min(1).trim(), // non-empty string
+  date: z.string().refine((d) => !isNaN(Date.parse(d)), {
+    // parseable date
     message: "Invalid date format",
   }),
-  durationDays: z.number().min(1),                          // at least 1 day
-  facility: z.string().min(1),                             // facility ObjectId as string
-  discipline: z.enum(["Boulder", "Lead", "Speed"]),        // one of three values
-  ageCategories: z.array(z.string()).min(1),               // at least one bracket
-  division: z.enum(["Male", "Female", "Mixed"]),           // competition division
+  durationDays: z.number().min(1), // at least 1 day
+  facility: z.string().min(1), // facility ObjectId as string
+  discipline: z.enum(["Boulder", "Lead", "Speed"]), // one of three values
+  ageCategories: z.array(z.string()).min(1), // at least one bracket
+  division: z.enum(["Male", "Female", "Mixed"]), // competition division
 
   // Optional fields—only validated if present
-  imageUrl: z.string().url().optional(),                   // must be URL if given
+  imageUrl: z.string().url().optional(), // must be URL if given
   description: z.string().optional(),
   registrationDeadline: z.string().optional(),
   maxParticipants: z.number().min(1).optional(),
@@ -53,7 +52,8 @@ export async function GET() {
     console.error("Events GET error:", err);
 
     // Return a generic error message to the client
-    const message = err instanceof Error ? err.message : "Unable to load events";
+    const message =
+      err instanceof Error ? err.message : "Unable to load events";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -120,7 +120,8 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     // Log and return any creation errors
     console.error("Events POST error:", err);
-    const message = err instanceof Error ? err.message : "Failed to create event";
+    const message =
+      err instanceof Error ? err.message : "Failed to create event";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
