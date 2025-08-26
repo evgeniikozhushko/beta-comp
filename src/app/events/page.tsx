@@ -1,12 +1,14 @@
 // src/app/events/page.tsx
 
 import CreateEventSheet from "@/components/CreateEventSheet";
+import UpdateEventSheet from "@/components/UpdateEventSheet";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { mongoConnect } from "@/lib/mongodb";
 import Event from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import DeleteEventButton from "@/components/DeleteEventButton";
+import { Button } from "@/components/ui/button";
 
 /**
  * EventsPage
@@ -85,13 +87,23 @@ export default async function EventsPage() {
             <div
               key={String(event._id)}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 pb-20 hover:shadow-lg transition-shadow relative"            >
-              {/* Delete button */}
-              <div className="absolute bottom-6 left-4">
-                <DeleteEventButton
-                  eventId={event._id.toString()}
-                  eventName={event.name}
-                />
-              </div>
+              {/* Action buttons - only show to event owner */}
+              {event.createdBy.toString() === session.user.id && (
+                <div className="absolute bottom-6 left-4 flex gap-2">
+                  <UpdateEventSheet 
+                    facilities={facilities} 
+                    eventId={event._id.toString()}
+                  >
+                    <Button variant="outline" size="sm">
+                      Edit Event
+                    </Button>
+                  </UpdateEventSheet>
+                  <DeleteEventButton
+                    eventId={event._id.toString()}
+                    eventName={event.name}
+                  />
+                </div>
+              )}
 
               {/* Event title */}
               <h2 className="text-xl font-semibold mb-2">{event.name}</h2>

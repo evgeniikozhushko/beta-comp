@@ -6,6 +6,27 @@ import Facility from "@/lib/models/Facility";
 import { Types } from "mongoose";
 import { z } from "zod";
 
+interface PopulatedEvent {
+  _id: Types.ObjectId;
+  name: string;
+  date: Date;
+  durationDays: number;
+  facility: {
+    _id: Types.ObjectId;
+    name: string;
+  };
+  discipline: string;
+  ageCategories: string[];
+  division: string;
+  description?: string;
+  registrationDeadline?: Date;
+  maxParticipants?: number;
+  entryFee?: number;
+  contactEmail?: string;
+  imageUrl?: string;
+  createdBy: Types.ObjectId;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -26,7 +47,7 @@ export async function GET(
     // 4. Find event with populated facility
     const event = (await Event.findById(params.id)
       .populate("facility")
-      .lean()) as any;
+      .lean()) as PopulatedEvent | null;
 
     // 5. Handle non-existent event
     if (!event) {

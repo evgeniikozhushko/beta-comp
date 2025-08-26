@@ -4,7 +4,7 @@ import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
 import { Types } from "mongoose";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1️⃣ Define a Zod schema to validate incoming event data
