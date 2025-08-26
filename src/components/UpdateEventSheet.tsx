@@ -79,6 +79,7 @@ export default function UpdateEventSheet({
       }
       const data = await response.json();
       setEventData(data);
+
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load event";
@@ -88,6 +89,7 @@ export default function UpdateEventSheet({
       setLoading(false);
     }
   }, [eventId, eventData]);
+
   // Fetch data when sheet opens
   useEffect(() => {
     if (open && !eventData && !loading) {
@@ -132,7 +134,9 @@ export default function UpdateEventSheet({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-md">
+      <SheetContent
+        side="left"
+        className="max-w-lg w-full overflow-y-auto px-10">
         <SheetHeader>
           <SheetTitle>Edit Event</SheetTitle>
           <SheetDescription>Update the event details below.</SheetDescription>

@@ -65,7 +65,7 @@ export default function CreateEventSheet({ facilities }: Props) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-4 p-6">
+        <div className="mt-4">
           <EventForm
             facilities={facilities}
             resetOnSuccess
