@@ -29,7 +29,7 @@ interface PopulatedEvent {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 1. Authentication check
@@ -37,15 +37,17 @@ export async function GET(
     if (!session) {
       return NextResponse.json({ error: "Invalid Event ID" }, { status: 401 });
     }
-    // 2. Validate event ID format
-    if (!Types.ObjectId.isValid(params.id)) {
+    
+    // 2. Await params and validate event ID format
+    const { id } = await params;
+    if (!Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: "Invalid Event ID" }, { status: 400 });
     }
     // 3. Connect to database
     await mongoConnect();
 
     // 4. Find event with populated facility
-    const event = (await Event.findById(params.id)
+    const event = (await Event.findById(id)
       .populate("facility")
       .lean()) as PopulatedEvent | null;
 
@@ -99,15 +101,17 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // 1. Authentication check
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  // 2. Validate event ID format
-  if (!Types.ObjectId.isValid(params.id)) {
+  
+  // 2. Await params and validate event ID format
+  const { id } = await params;
+  if (!Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: "Invalid Event ID" }, { status: 400 });
   }
 
@@ -164,7 +168,7 @@ export async function PUT(
     await mongoConnect();
 
     // 6. Check if event exists and get current data
-    const existingEvent = await Event.findById(params.id);
+    const existingEvent = await Event.findById(id);
     if (!existingEvent) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
@@ -193,7 +197,7 @@ export async function PUT(
     // ─────────────────────────────────────────────────────────────────────────────
     // Update the event
     const updatedEvent = await Event.findByIdAndUpdate(
-      params.id,
+      id,
       {
         name: validatedData.name,
         date: new Date(validatedData.date),
