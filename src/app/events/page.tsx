@@ -68,7 +68,7 @@ export default async function EventsPage() {
 
   // 6. Render the page: form + event list
   return (
-    <div className="min-h-screen p-8 sm:p-20">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Page title */}
       <h1 className="text-3xl font-bold mb-6">Events</h1>
 
