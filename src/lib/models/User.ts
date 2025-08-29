@@ -10,6 +10,7 @@
     password?: string;
     createdAt: Date;
     updatedAt: Date;
+    eventsAttanding?: any[]; // list of events signed up for
   }
 
   // Define the Mongoose schema with types and options
@@ -35,6 +36,9 @@
       password: {
         type: String,
         required: false, // Not required for Google OAuth users
+      },
+      eventsAttanding: {
+        type: [Schema.Types.ObjectId]
       },
     },
     {

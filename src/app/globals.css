@@ -120,3 +120,62 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Responsive Navigation Enhancements */
+@layer components {
+  /* Mobile menu improvements */
+  .mobile-nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-md text-base font-medium transition-colors;
+    @apply hover:bg-accent hover:text-accent-foreground;
+    @apply focus:bg-accent focus:text-accent-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none;
+    min-height: 44px; /* Touch-friendly minimum */
+  }
+
+  /* Smooth transitions for all interactive elements */
+  .nav-transition {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  /* Enhanced focus states for better accessibility */
+  .focus-enhanced {
+    @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none;
+  }
+}
+
+/* Custom animations for mobile menu */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+/* Responsive breakpoints for fine-tuned control */
+@media (max-width: 640px) {
+  /* Extra small screens */
+  .mobile-nav-item {
+    @apply px-3 py-2.5;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Tablet screens - adjust desktop nav spacing */
+  .desktop-nav-item {
+    @apply px-3 py-2;
+  }
+}

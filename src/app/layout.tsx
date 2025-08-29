@@ -32,27 +32,22 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {session && (
-          <header
-            className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-          >
+          <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex h-16 items-center justify-between">
-
-                {/* App title */}
+                {/* App title with responsive text size */}
                 <div className="flex items-center">
-                  <code
-                    className="tracking-wide bg-black/[.05] dark:bg-white/[.06] px-2 py-1 rounded text-md font-[family-name:var(--font-geist-mono)] font-semibold"
-                  >
+                  <code className="tracking-wide bg-black/[.05] dark:bg-white/[.06] px-2 py-1 rounded text-sm sm:text-md font-[family-name:var(--font-geist-mono)] font-semibold">
                     beta comp
                   </code>
                 </div>
 
-                {/* Navigation */}
+                {/* Navigation - now fully responsive */}
                 <MainNavigation />
 
-                {/* User actions */}
-                <div className="flex items-center gap-4">
-                  <span className="text-xs text-muted-foreground hidden sm:block">
+                {/* User actions with responsive text */}
+                <div className="flex items-center gap-2 sm:gap-4">
+                  <span className="text-xs text-muted-foreground hidden sm:block truncate max-w-[120px] lg:max-w-none">
                     {session.user.displayName}
                   </span>
                   <SignOutButton />
