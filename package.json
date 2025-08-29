@@ -10,7 +10,8 @@
     "gen:facilities": "tsx scripts/generate-facilities-from-cec.ts",
     "seed:facilities": "tsx scripts/seed-facilities.ts",
     "seed:facilities:manual": "tsx scripts/seed-facilities-manual.ts",
-    "migrate:roles": "tsx scripts/migrate-user-roles.ts"
+    "migrate:roles": "tsx scripts/migrate-user-roles.ts",
+    "assign:role": "tsx scripts/assign-user-role.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
