@@ -72,6 +72,16 @@ export default async function EventsPage() {
       {/* Page title */}
       <h1 className="text-3xl font-bold mb-6">Events</h1>
 
+      {/* Debug Info - Remove after identifying user */}
+      {/* <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Debug Info (Current User)</h3>
+        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+          <div><strong>User ID:</strong> {session.user.id}</div>
+          <div><strong>Display Name:</strong> {session.user.displayName}</div>
+          <div><strong>Email:</strong> {session.user.email || 'No email'}</div>
+        </div>
+      </div> */}
+
       {/* Event creation sheet */}
       <div className="mb-6">
         <CreateEventSheet facilities={facilities} />
@@ -86,7 +96,8 @@ export default async function EventsPage() {
           {rawEvents.map((event: any) => (
             <div
               key={String(event._id)}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 pb-20 hover:shadow-lg transition-shadow relative"            >
+              className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 pb-20 hover:shadow-lg transition-shadow relative"
+            >
               {/* Action buttons - only show to event owner */}
               {event.createdBy.toString() === session.user.id && (
                 <div className="absolute bottom-6 left-4 flex gap-2">
@@ -104,6 +115,18 @@ export default async function EventsPage() {
                   />
                 </div>
               )}
+
+              {/* Debug info */}
+              {/* <div className="text-xs text-gray-500 mt-2 bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                <strong>Event Owner ID:</strong> {event.createdBy.toString()}
+                <br />
+                <strong>Your User ID:</strong> {session.user.id}
+                <br />
+                <strong>You own this event:</strong>{" "}
+                <span className={event.createdBy.toString() === session.user.id ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                  {event.createdBy.toString() === session.user.id ? "YES" : "NO"}
+                </span>
+              </div> */}
 
               {/* Event title */}
               <h2 className="text-xl font-semibold mb-2">{event.name}</h2>
