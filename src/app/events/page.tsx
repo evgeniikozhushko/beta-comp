@@ -9,6 +9,7 @@ import Event from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import DeleteEventButton from "@/components/DeleteEventButton";
 import { Button } from "@/components/ui/button";
+import { hasPermission, canManageEvent } from "@/lib/types/permissions";
 
 /**
  * EventsPage
@@ -72,20 +73,27 @@ export default async function EventsPage() {
       {/* Page title */}
       <h1 className="text-3xl font-bold mb-6">Events</h1>
 
-      {/* Debug Info - Remove after identifying user */}
-      {/* <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Debug Info (Current User)</h3>
-        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-          <div><strong>User ID:</strong> {session.user.id}</div>
-          <div><strong>Display Name:</strong> {session.user.displayName}</div>
-          <div><strong>Email:</strong> {session.user.email || 'No email'}</div>
+      {/* Role info display */}
+      <div className="mb-6 p-4 dark:bg-blue-900/20 border border-red-200 dark:border-blue-800 rounded-lg">
+        <h3 className="font-semibold text-black-900 dark:text-blue-100 mb-2">User Info</h3>
+        <div className="text-sm text-black-900 dark:text-blue-200 space-y-1">
+          <div><strong>User:</strong> {session.user.displayName}</div>
+          <div><strong>Role:</strong> {session.user.role ? session.user.role.toUpperCase() : 'NOT SET'}</div>
+          <div><strong>Can create events:</strong> {session.user.role && hasPermission(session.user.role, 'canCreateEvents') ? 'Yes' : 'No'}</div>
+          {!session.user.role && (
+            <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded text-yellow-800 dark:text-yellow-200">
+              <strong>⚠️ Role not set:</strong> Please sign out and sign back in to get your role assigned, or run the migration script.
+            </div>
+          )}
         </div>
-      </div> */}
-
-      {/* Event creation sheet */}
-      <div className="mb-6">
-        <CreateEventSheet facilities={facilities} />
       </div>
+
+      {/* Event creation sheet - only show to users who can create events */}
+      {(session.user.role && hasPermission(session.user.role, 'canCreateEvents')) && (
+        <div className="mb-6">
+          <CreateEventSheet facilities={facilities} />
+        </div>
+      )}
 
       {/* Event list or no-data message */}
       {rawEvents.length === 0 ? (
@@ -98,8 +106,8 @@ export default async function EventsPage() {
               key={String(event._id)}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 pb-20 hover:shadow-lg transition-shadow relative"
             >
-              {/* Action buttons - only show to event owner */}
-              {event.createdBy.toString() === session.user.id && (
+              {/* Action buttons - role-based permissions */}
+              {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'update')) && (
                 <div className="absolute bottom-6 left-4 flex gap-2">
                   <UpdateEventSheet 
                     facilities={facilities} 
@@ -109,10 +117,12 @@ export default async function EventsPage() {
                       Edit Event
                     </Button>
                   </UpdateEventSheet>
-                  <DeleteEventButton
-                    eventId={event._id.toString()}
-                    eventName={event.name}
-                  />
+                  {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'delete')) && (
+                    <DeleteEventButton
+                      eventId={event._id.toString()}
+                      eventName={event.name}
+                    />
+                  )}
                 </div>
               )}
 

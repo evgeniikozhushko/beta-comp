@@ -9,7 +9,8 @@
     "lint": "next lint",
     "gen:facilities": "tsx scripts/generate-facilities-from-cec.ts",
     "seed:facilities": "tsx scripts/seed-facilities.ts",
-    "seed:facilities:manual": "tsx scripts/seed-facilities-manual.ts"
+    "seed:facilities:manual": "tsx scripts/seed-facilities-manual.ts",
+    "migrate:roles": "tsx scripts/migrate-user-roles.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",

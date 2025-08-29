@@ -7,6 +7,7 @@ import { mongoConnect } from "@/lib/mongodb";
 import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
+import { hasPermission, canManageEvent } from "@/lib/types/permissions";
 
 // Return shape for useActionState
 export type CreateEventState =
@@ -65,6 +66,11 @@ export async function createEventAction(
   const session = await auth();
   if (!session) {
     return { pending: false, error: "UNAUTHORIZED" };
+  }
+
+  // 2. Permission check - user must be able to create events
+  if (!hasPermission(session.user.role, 'canCreateEvents')) {
+    return { pending: false, error: "PERMISSION_DENIED" };
   }
 
   // 2. Extract and normalize raw data from FormData
@@ -238,7 +244,8 @@ export async function updateEventAction(
       return { pending: false, error: "EVENT_NOT_FOUND", values: raw };
     }
 
-    if (existingEvent.createdBy.toString() !== session.user.id) {
+    // Permission check - use role-based permissions
+    if (!canManageEvent(session.user.role, existingEvent.createdBy.toString(), session.user.id, 'update')) {
       return { pending: false, error: "NOT_AUTHORIZED", values: raw };
     }
 
@@ -318,8 +325,8 @@ export async function deleteEventAction(
       return { pending: false, error: "EVENT_NOT_FOUND" };
     }
 
-    // After finding the event, check if user owns it
-    if (event.createdBy.toString() !== session.user.id) {
+    // Permission check - use role-based permissions
+    if (!canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'delete')) {
       return { pending: false, error: "NOT_Authorized" };
     }
 
