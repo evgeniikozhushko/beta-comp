@@ -1,3 +1,5 @@
+// Permission matrix 
+
 export type UserRole = 'owner' | 'admin' | 'athlete' | 'official';
 
 export interface Permission {
@@ -30,7 +32,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     canUpdateAnyEvent: true,
     canDeleteAnyEvent: true,
     canManageUsers: true,
-    canRegisterForEvents: true,
+    canRegisterForEvents: false,
   },
   athlete: {
     canViewEvents: true,
