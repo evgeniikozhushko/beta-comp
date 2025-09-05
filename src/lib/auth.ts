@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
 import { mongoConnect } from "./mongodb";
 import User from "./models/User";
+import { UserRole } from "./types/permissions";
 
 // Environment variables for Google OAuth and JWT
 const JWT_SECRET =
@@ -19,6 +20,7 @@ export interface User {
   displayName: string; // User's display name from Google
   email?: string; // User's email (optional)
   picture?: string; // User's profile picture URL (optional)
+  role: UserRole; // User's role for permissions
 }
 
 export interface Session {
@@ -32,6 +34,7 @@ interface JWTPayload {
   displayName: string;
   email?: string;
   picture?: string;
+  role: UserRole;
   exp: number;
   iat: number;
 }
@@ -44,6 +47,7 @@ interface DatabaseUser {
   email?: string;
   picture?: string;
   password?: string;
+  role: UserRole;
 }
 
 /**
@@ -105,6 +109,7 @@ export async function auth(): Promise<Session | null> {
       displayName: decoded.displayName,
       email: decoded.email,
       picture: decoded.picture,
+      role: decoded.role,
     },
     expires: new Date(decoded.exp * 1000).toISOString(),
   };
@@ -241,6 +246,7 @@ async function findOrCreateUser(googleUser: {
         displayName: existingUser.displayName,
         email: existingUser.email,
         picture: existingUser.picture,
+        role: existingUser.role,
       };
     }
 
@@ -264,17 +270,24 @@ async function findOrCreateUser(googleUser: {
           displayName: existingUser.displayName,
           email: existingUser.email,
           picture: existingUser.picture,
+          role: existingUser.role,
         };
       }
     }
 
     // Create new user if not found
     console.log('Creating new user:', googleUser.displayName);
+    
+    // Check if this is the owner email and assign owner role
+    const role: UserRole = googleUser.email === 'evgeniimedium@gmail.com' ? 'owner' : 'athlete';
+    console.log('Assigning role:', role, 'to user:', googleUser.email);
+    
     const newUser = await User.create({
       googleId: googleUser.googleId,
       displayName: googleUser.displayName,
       email: googleUser.email,
       picture: googleUser.picture,
+      role: role,
     });
 
     return {
@@ -283,6 +296,7 @@ async function findOrCreateUser(googleUser: {
       displayName: newUser.displayName,
       email: newUser.email,
       picture: newUser.picture,
+      role: newUser.role,
     };
   } catch (error) {
     console.error('Error in findOrCreateUser:', error);
@@ -303,6 +317,7 @@ export async function setAuthCookie(user: User): Promise<void> {
     displayName: user.displayName,
     email: user.email,
     picture: user.picture,
+    role: user.role,
   });
 
   // Set HTTP-only cookie (secure, can't be accessed by JavaScript)
@@ -379,6 +394,7 @@ export async function signInWithCredentials(email: string, password: string): Pr
     displayName: user.displayName,
     email: user.email,
     picture: user.picture || '',
+    role: user.role,
   };
 }
 
@@ -402,11 +418,16 @@ export async function createUserWithCredentials(email: string, password: string,
     // Hash password
     const hashedPassword = await hashPassword(password);
     
+    // Check if this is the owner email and assign owner role
+    const role: UserRole = email === 'evgeniimedium@gmail.com' ? 'owner' : 'athlete';
+    console.log('Creating user with role:', role, 'for email:', email);
+    
     // Create new user
     const newUser = await User.create({
       email,
       displayName: name || email.split('@')[0], // Use email prefix as name if not provided
       password: hashedPassword,
+      role: role,
       // googleId and picture are optional for email/password users
     });
 
@@ -416,6 +437,7 @@ export async function createUserWithCredentials(email: string, password: string,
       displayName: newUser.displayName,
       email: newUser.email,
       picture: newUser.picture,
+      role: newUser.role,
     };
   } catch (error) {
     console.error('Error creating user:', error);

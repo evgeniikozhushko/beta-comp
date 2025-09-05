@@ -1,6 +1,5 @@
 // models/Event.ts
 import { Schema, Document, model, models, Types } from "mongoose";
-import { array } from "zod";
 
 export interface IEvent extends Document {
   // Required core info
@@ -20,7 +19,7 @@ export interface IEvent extends Document {
   maxParticipants?: number; // cap on registrants
   entryFee?: number; // e.g. in cents or decimals
   contactEmail?: string; // event organizer
-  attendies?: any[]; // list of attendees
+  attendies?: Types.ObjectId[]; // list of attendees
 
   // Timestamps
   createdAt: Date;

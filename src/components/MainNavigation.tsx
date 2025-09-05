@@ -23,18 +23,15 @@ import {
 const navigationItems = [
   {
     href: "/",
-    label: "Home",
-    icon: HomeIcon,
+    label: "Home"
   },
   {
     href: "/events", 
-    label: "Events",
-    icon: CalendarIcon,
+    label: "Events"
   },
   {
     href: "/about",
-    label: "About", 
-    icon: InfoIcon,
+    label: "About"
   },
 ];
 
@@ -63,7 +60,6 @@ export function MainNavigation() {
                         : ''
                     }`}
                   >
-                    <item.icon className="h-4 w-4" />
                     {item.label}
                   </Link>
                 </NavigationMenuLink>
@@ -101,7 +97,7 @@ export function MainNavigation() {
                       : 'text-foreground'
                   }`}
                 >
-                  <item.icon className="h-5 w-5" />
+                  {/* <item.icon className="h-5 w-5" /> */}
                   {item.label}
                 </Link>
               );

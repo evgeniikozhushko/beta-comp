@@ -1,5 +1,6 @@
   // models/User.ts
-  import { Schema, Document, model, models } from 'mongoose';
+  import { Schema, Document, model, models, Types } from 'mongoose';
+  import { UserRole } from '../types/permissions';
 
   // TypeScript interface for the User document
   export interface IUser extends Document {
@@ -8,9 +9,10 @@
     email?: string;
     picture?: string;
     password?: string;
+    role: UserRole;
     createdAt: Date;
     updatedAt: Date;
-    eventsAttanding?: any[]; // list of events signed up for
+    eventsAttanding?: Types.ObjectId[]; // list of events signed up for
   }
 
   // Define the Mongoose schema with types and options
@@ -39,6 +41,13 @@
       },
       eventsAttanding: {
         type: [Schema.Types.ObjectId]
+      },
+      role: {
+        type: String,
+        enum: ['owner', 'admin', 'athlete', 'official'],
+        default: 'athlete',
+        required: true,
+        index: true,
       },
     },
     {
