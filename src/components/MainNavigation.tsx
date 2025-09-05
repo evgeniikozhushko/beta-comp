@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarIcon, HomeIcon, InfoIcon, MenuIcon } from "lucide-react";
+import { MenuIcon } from "lucide-react";
 
 import {
   NavigationMenu,
