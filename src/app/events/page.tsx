@@ -82,20 +82,20 @@ export default async function EventsPage() {
       : `${f.name} — ${f.province}`, // Include location
   }));
 
-  // Get user's registrations if authenticated
-  let userRegistrations: any[] = [];
-  if (session) {
-    userRegistrations = await Registration.find({
-      userId: new Types.ObjectId(session.user.id),
-      status: { $in: ['registered', 'waitlisted'] }
-    }).lean();
-  }
+   // Get user's registrations if authenticated
+   let userRegistrations: any[] = [];
+   if (session) {
+     userRegistrations = await Registration.find({
+       userId: new Types.ObjectId(session.user.id),
+       status: { $in: ['registered', 'waitlisted'] }
+     }).lean();
+   }
 
-  // Create registration lookup
-  const registrationLookup: Record<string, string> = {};
-  userRegistrations.forEach((reg) => {
-    registrationLookup[reg.eventId.toString()] = reg.status;
-  });
+   // Create registration lookup
+   const registrationLookup = userRegistrations.reduce((acc, reg) => {
+    acc[reg.eventId.toString()] = reg.status;
+    return acc;
+  }, {});
 
   // Check if user can register for events
   const userCanRegister = session ? hasPermission(session.user.role, 'canRegisterForEvents') : false;
@@ -128,7 +128,7 @@ export default async function EventsPage() {
         </div>
       )}
 
-      {/* Unified Events with Registration and Admin Controls */}
+{/* Unified Events with Registration and Admin Controls */}
       <div>
         {rawEvents.length === 0 ? (
           <p className="text-gray-600">No events found.</p>
