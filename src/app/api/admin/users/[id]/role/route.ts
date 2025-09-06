@@ -34,24 +34,27 @@ const RoleUpdateSchema = z.object({
 // GET /api/admin/users/[id]/role - Get specific user details
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<UserRoleResponse | { error: string }>> {
     try {
-        // 1. Authentication check
+        // 1. Await params (Next.js 15 requirement)
+        const { id } = await params;
+        
+        // 2. Authentication check
         const session = await auth()
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
-        // 2. Permission check
+        // 3. Permission check
         if (!hasPermission(session.user.role, 'canManageUsers')) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // 3. Connect to database
+        // 4. Connect to database
         await mongoConnect()
 
-        // 4. Find User
-        const user = await User.findById(params.id).select('displayName email role createdAt updatedAt').lean<LeanUser>()
+        // 5. Find User
+        const user = await User.findById(id).select('displayName email role createdAt updatedAt').lean<LeanUser>()
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
@@ -79,21 +82,24 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
   ): Promise<NextResponse<UserRoleResponse | { error: string; details?: string }>> {
     try {
-      // 1. Authentication check
+      // 1. Await params (Next.js 15 requirement)
+      const { id } = await params;
+      
+      // 2. Authentication check
       const session = await auth();
       if (!session) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
-      // 2. Permission check
+      // 3. Permission check
       if (!hasPermission(session.user.role, 'canManageUsers')) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
 
-      // 3. Parse and validate request body
+      // 4. Parse and validate request body
       const body = await request.json() as RoleUpdateRequest;
       const validation = RoleUpdateSchema.safeParse(body);
 
@@ -112,8 +118,8 @@ export async function PATCH(
       // 4. Connect to database
       await mongoConnect();
 
-      // 5. Find target user
-      const targetUser = await User.findById(params.id);
+      // 6. Find target user
+      const targetUser = await User.findById(id);
       if (!targetUser) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
@@ -143,9 +149,9 @@ export async function PATCH(
         );
       }
 
-      // 7. Update user role
+      // 8. Update user role
       const updatedUser = await User.findByIdAndUpdate(
-        params.id,
+        id,
         { role: newRole },
         { new: true, runValidators: true }
       ).select('displayName email role createdAt updatedAt');
@@ -157,11 +163,11 @@ export async function PATCH(
         );
       }
 
-      // 8. Log the role change
+      // 9. Log the role change
       console.log(`Role change: ${session.user.displayName} (${session.user.role}) changed 
   ${updatedUser.displayName}'s role to ${newRole}`);
 
-      // 9. Format response
+      // 10. Format response
       const userResponse: UserRoleResponse = {
         id: updatedUser._id.toString(),
         displayName: updatedUser.displayName,

@@ -27,7 +27,7 @@ interface EventData {
   ageCategories: string[];
   division: string;
   description?: string;
-  registrationDeadline?: string; // Already formatted for date input
+  registrationDeadline: string; // Already formatted for date input
   maxParticipants?: number;
   entryFee?: number;
   contactEmail?: string;
