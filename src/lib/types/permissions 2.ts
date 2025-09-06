@@ -1,5 +1,3 @@
-// Permission matrix 
-
 export type UserRole = 'owner' | 'admin' | 'athlete' | 'official';
 
 export interface Permission {
@@ -9,7 +7,6 @@ export interface Permission {
   canDeleteOwnEvents: boolean;
   canUpdateAnyEvent: boolean;
   canDeleteAnyEvent: boolean;
-  canManageEvents: boolean;
   canManageUsers: boolean;
   canRegisterForEvents: boolean;
 }
@@ -22,7 +19,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     canDeleteOwnEvents: true,
     canUpdateAnyEvent: true,
     canDeleteAnyEvent: true,
-    canManageEvents: true,
     canManageUsers: true,
     canRegisterForEvents: true,
   },
@@ -33,9 +29,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     canDeleteOwnEvents: true,
     canUpdateAnyEvent: true,
     canDeleteAnyEvent: true,
-    canManageEvents: true,
     canManageUsers: true,
-    canRegisterForEvents: false,
+    canRegisterForEvents: true,
   },
   athlete: {
     canViewEvents: true,
@@ -44,7 +39,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     canDeleteOwnEvents: false,
     canUpdateAnyEvent: false,
     canDeleteAnyEvent: false,
-    canManageEvents: false,
     canManageUsers: false,
     canRegisterForEvents: true,
   },
@@ -55,7 +49,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     canDeleteOwnEvents: false,
     canUpdateAnyEvent: false,
     canDeleteAnyEvent: false,
-    canManageEvents: false,
     canManageUsers: false,
     canRegisterForEvents: false,
   },

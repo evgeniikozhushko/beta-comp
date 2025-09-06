@@ -8,6 +8,7 @@ import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
 import { hasPermission, canManageEvent } from "@/lib/types/permissions";
+import Registration from '@/lib/models/Registration';
 
 // Return shape for useActionState
 export type CreateEventState =
@@ -341,5 +342,226 @@ export async function deleteEventAction(
   } catch (err) {
     console.error("Event deletion failed:", err);
     return { pending: false, error: "DB_ERROR" };
+  }
+}
+
+// Register for event action
+export async function registerForEventAction(eventId: string) {
+  try {
+    // 1. Authentication check
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // 2. Permission check - only athletes and officials can register
+    // Admins cannot register per recent permission update
+    if (!hasPermission(session.user.role, 'canRegisterForEvents')) {
+      return {
+        success: false,
+        error: 'You do not have permission to register for events'
+      };
+    }
+
+    // 3. Connect to database
+    await mongoConnect();
+
+    // 4. Validate event ID
+    if (!Types.ObjectId.isValid(eventId)) {
+      return { success: false, error: 'Invalid event ID' };
+    }
+
+    // 5. Find event
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return { success: false, error: 'Event not found' };
+    }
+
+    // 6. Check if registration is open
+    if (!event.isRegistrationOpen()) {
+      return { success: false, error: 'Registration is closed for this event' };
+    }
+
+    // 7. Check if user is already registered
+    const existingRegistration = await Registration.findOne({
+      userId: new Types.ObjectId(session.user.id),
+      eventId: new Types.ObjectId(eventId),
+      status: { $in: ['registered', 'waitlisted'] }
+    });
+
+    if (existingRegistration) {
+      return {
+        success: false,
+        error: `You are already ${existingRegistration.status} for this event`
+      };
+    }
+
+    // 8. Determine registration status based on capacity
+    const registrationStatus = event.hasCapacity() ? 'registered' : 'waitlisted';
+
+    // 9. Create registration
+    const registration = new Registration({
+      userId: new Types.ObjectId(session.user.id),
+      eventId: new Types.ObjectId(eventId),
+      status: registrationStatus
+    });
+
+    await registration.save();
+
+    // 10. Update event registration count
+    await event.updateRegistrationCount();
+
+    // 11. Revalidate the events page
+    revalidatePath('/events');
+
+    return {
+      success: true,
+      message: registrationStatus === 'registered'
+        ? 'Successfully registered for event!'
+        : 'Event is full, you have been added to the waitlist',
+      status: registrationStatus
+    };
+
+  } catch (error) {
+    console.error('Registration error:', error);
+
+    // Handle duplicate registration error
+    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
+      return { success: false, error: 'You are already registered for this event' };
+    }
+
+    return { success: false, error: 'Failed to register for event' };
+  }
+}
+
+// Unregister from event action
+export async function unregisterFromEventAction(eventId: string) {
+  try {
+    // 1. Authentication check
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // 2. Connect to database
+    await mongoConnect();
+
+    // 3. Validate event ID
+    if (!Types.ObjectId.isValid(eventId)) {
+      return { success: false, error: 'Invalid event ID' };
+    }
+
+    // 4. Find event
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return { success: false, error: 'Event not found' };
+    }
+
+    // 5. Check if unregistration is allowed (before deadline)
+    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
+      return {
+        success: false,
+        error: 'Cannot unregister after registration deadline'
+      };
+    }
+
+    // 6. Find and remove registration
+    const registration = await Registration.findOneAndUpdate(
+      {
+        userId: new Types.ObjectId(session.user.id),
+        eventId: new Types.ObjectId(eventId),
+        status: { $in: ['registered', 'waitlisted'] }
+      },
+      { status: 'cancelled' },
+      { new: true }
+    );
+
+    if (!registration) {
+      return { success: false, error: 'You are not registered for this event' };
+    }
+
+    // 7. If someone was registered (not waitlisted), promote someone from waitlist
+    if (registration.status === 'registered') {
+      const waitlistUser = await Registration.findOneAndUpdate(
+        {
+          eventId: new Types.ObjectId(eventId),
+          status: 'waitlisted'
+        },
+        { status: 'registered' },
+        { sort: { registeredAt: 1 }, new: true } // First in, first promoted
+      );
+
+      if (waitlistUser) {
+        console.log(`Promoted user ${waitlistUser.userId} from waitlist to registered`);
+      }
+    }
+
+    // 8. Update event registration count
+    await event.updateRegistrationCount();
+
+    // 9. Revalidate the events page
+    revalidatePath('/events');
+
+    return {
+      success: true,
+      message: 'Successfully unregistered from event'
+    };
+
+  } catch (error) {
+    console.error('Unregistration error:', error);
+    return { success: false, error: 'Failed to unregister from event' };
+  }
+}
+
+// Get user's registration status for an event
+export async function getUserEventRegistrationStatus(eventId: string) {
+  try {
+    const session = await auth();
+    if (!session) return null;
+
+    await mongoConnect();
+
+    if (!Types.ObjectId.isValid(eventId)) return null;
+
+    const registration = await Registration.findOne({
+      userId: new Types.ObjectId(session.user.id),
+      eventId: new Types.ObjectId(eventId),
+      status: { $in: ['registered', 'waitlisted'] }
+    });
+
+    return registration ? registration.status : null;
+  } catch (error) {
+    console.error('Error getting registration status:', error);
+    return null;
+  }
+}
+
+// Get event registrations (for admins)
+export async function getEventRegistrations(eventId: string) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // Only admins/owners can view registrations
+    if (!hasPermission(session.user.role, 'canManageEvents')) {
+      return { success: false, error: 'Insufficient permissions' };
+    }
+
+    await mongoConnect();
+
+    if (!Types.ObjectId.isValid(eventId)) {
+      return { success: false, error: 'Invalid event ID' };
+    }
+
+    const registrations = await (Registration as any).getEventRegistrations(
+      new Types.ObjectId(eventId)
+    );
+
+    return { success: true, registrations };
+  } catch (error) {
+    console.error('Error getting event registrations:', error);
+    return { success: false, error: 'Failed to get registrations' };
   }
 }

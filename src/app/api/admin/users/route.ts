@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth} from '@/lib/auth';
 import { hasPermission } from "@/lib/types/permissions";
 import { mongoConnect } from "@/lib/mongodb";
-import User from "@/lib/models/User";
+import User, { IUser } from "@/lib/models/User";
+import { Types } from 'mongoose';
+
+// Define lean user type for better type safety
+type LeanUser = Pick<IUser, 'displayName' | 'email' | 'role' | 'createdAt' | 'picture'> & {
+  _id: Types.ObjectId;
+};
 
 interface UserListResponse {
     users: Array<{
@@ -62,10 +68,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<UserListRe
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
-            .lean(),
+            .lean<LeanUser[]>(),
           User.countDocuments(query)
         ]);
-  
+
         // 7. Format response
         const formattedUsers = users.map(user => ({
           id: user._id.toString(),

@@ -1,5 +1,5 @@
 // models/Event.ts
-import { Schema, Document, model, models, Types } from "mongoose";
+import mongoose, { Schema, Document, model, models, Types } from "mongoose";
 
 export interface IEvent extends Document {
   // Required core info
@@ -20,6 +20,12 @@ export interface IEvent extends Document {
   entryFee?: number; // e.g. in cents or decimals
   contactEmail?: string; // event organizer
   attendies?: Types.ObjectId[]; // list of attendees
+
+  // Registration-related fields
+  maxCapacity?: number; // 0 means unlimited
+  allowRegistration?: boolean;
+  registrationCount?: number;
+  waitlistCount?: number;
 
   // Timestamps
   createdAt: Date;
@@ -59,7 +65,6 @@ const EventSchema = new Schema<IEvent>(
     imageUrl: { type: String },
     description: { type: String },
 
-    registrationDeadline: { type: Date },
     maxParticipants: { type: Number, min: 1 },
     entryFee: { type: Number, min: 0 },
     contactEmail: { type: String, lowercase: true, match: /.+@.+\..+/ },
@@ -67,9 +72,71 @@ const EventSchema = new Schema<IEvent>(
     attendies: {
       type: [Schema.Types.ObjectId]
     },
+
+    // New registration-related fields
+    maxCapacity: {
+      type: Number,
+      default: 0, // 0 means unlimited
+      min: 0
+    },
+    registrationDeadline: {
+      type: Date,
+      required: false // Optional - if not set, registration open until event start
+    },
+    allowRegistration: {
+      type: Boolean,
+      default: true
+    },
+    registrationCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    waitlistCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
   },
   { timestamps: true }
 );
+
+// Add these methods to your Event schema before export
+EventSchema.methods.isRegistrationOpen = function() {
+  if (!this.allowRegistration) return false;
+  if (this.registrationDeadline && new Date() > this.registrationDeadline) return false;
+  return true;
+};
+
+EventSchema.methods.hasCapacity = function() {
+  if (this.maxCapacity === 0) return true; // Unlimited capacity
+  return this.registrationCount < this.maxCapacity;
+};
+
+EventSchema.methods.getRegistrationStatus = function() {
+  if (!this.isRegistrationOpen()) return 'closed';
+  if (!this.hasCapacity()) return 'full';
+  return 'open';
+};
+
+// Method to update registration count
+EventSchema.methods.updateRegistrationCount = async function() {
+  const Registration = models.Registration || mongoose.model('Registration');
+  const count = await Registration.countDocuments({
+    eventId: this._id,
+    status: 'registered'
+  });
+  const waitlistCount = await Registration.countDocuments({
+    eventId: this._id,
+    status: 'waitlisted'
+  });
+
+  this.registrationCount = count;
+  this.waitlistCount = waitlistCount;
+  await this.save();
+
+  return { registrationCount: count, waitlistCount };
+};
 
 // Prevent model recompilation in dev
 export default models.Event || model<IEvent>("Event", EventSchema);
