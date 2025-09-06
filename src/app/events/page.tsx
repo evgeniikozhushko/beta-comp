@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 // Use conditional rendering instead of client-only wrappers
-const CreateEventSheet = dynamic(() => import("@/components/CreateEventSheet"), { 
+const CreateEventSheet = dynamic(() => import("@/components/CreateEventSheet"), {
   loading: () => <div className="mb-6"><div className="animate-pulse bg-gray-200 h-10 rounded"></div></div>
 });
 
@@ -82,17 +82,17 @@ export default async function EventsPage() {
       : `${f.name} — ${f.province}`, // Include location
   }));
 
-   // Get user's registrations if authenticated
-   let userRegistrations: any[] = [];
-   if (session) {
-     userRegistrations = await Registration.find({
-       userId: new Types.ObjectId(session.user.id),
-       status: { $in: ['registered', 'waitlisted'] }
-     }).lean();
-   }
+  // Get user's registrations if authenticated
+  let userRegistrations: any[] = [];
+  if (session) {
+    userRegistrations = await Registration.find({
+      userId: new Types.ObjectId(session.user.id),
+      status: { $in: ['registered', 'waitlisted'] }
+    }).lean();
+  }
 
-   // Create registration lookup
-   const registrationLookup = userRegistrations.reduce((acc, reg) => {
+  // Create registration lookup
+  const registrationLookup = userRegistrations.reduce((acc, reg) => {
     acc[reg.eventId.toString()] = reg.status;
     return acc;
   }, {});
@@ -107,7 +107,7 @@ export default async function EventsPage() {
       <h1 className="text-3xl font-bold mb-6">Events</h1>
 
       {/* Role info display */}
-      <div className="mb-6 p-4 dark:bg-blue-900/20 border border-red-200 dark:border-blue-800 rounded-lg">
+      {/* <div className="mb-6 p-4 dark:bg-blue-900/20 border border-red-200 dark:border-blue-800 rounded-lg">
         <h3 className="font-semibold text-black-900 dark:text-blue-100 mb-2">User Info</h3>
         <div className="text-sm text-black-900 dark:text-blue-200 space-y-1">
           <div><strong>User:</strong> {session.user.displayName}</div>
@@ -119,7 +119,7 @@ export default async function EventsPage() {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Event creation sheet - only show to users who can create events */}
       {(session.user.role && hasPermission(session.user.role, 'canCreateEvents')) && (
@@ -128,7 +128,7 @@ export default async function EventsPage() {
         </div>
       )}
 
-{/* Unified Events with Registration and Admin Controls */}
+      {/* Unified Events with Registration and Admin Controls */}
       <div>
         {rawEvents.length === 0 ? (
           <p className="text-gray-600">No events found.</p>
@@ -138,7 +138,7 @@ export default async function EventsPage() {
             {rawEvents.map((event: any) => {
               const eventId = event._id.toString();
               const userRegistrationStatus = registrationLookup[eventId] || null;
-              
+
               // Implement registration status logic inline (since lean documents don't have methods)
               const getEventRegistrationStatus = (event: any) => {
                 // Default to allowing registration if field doesn't exist
@@ -147,7 +147,7 @@ export default async function EventsPage() {
                 if (event.maxCapacity > 0 && (event.registrationCount || 0) >= event.maxCapacity) return 'full';
                 return 'open';
               };
-              
+
               const eventStatus = getEventRegistrationStatus(event);
 
               return (
@@ -158,24 +158,16 @@ export default async function EventsPage() {
                   {/* Event Header */}
                   <div>
                     <h2 className="text-xl font-semibold">{event.name}</h2>
-                    {event.description && (
-                      <p className="text-muted-foreground mt-1">{event.description}</p>
-                    )}
                   </div>
 
                   {/* Event Details */}
                   <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+
                     {/* Date and time display */}
                     <p>
                       <span className="font-medium">Date:</span>{" "}
                       {new Date(event.date).toISOString().split('T')[0]} at{" "}
                       {new Date(event.date).toISOString().split('T')[1].split('.')[0]}
-                    </p>
-
-                    {/* Duration */}
-                    <p>
-                      <span className="font-medium">Duration:</span>{" "}
-                      {event.durationDays} days
                     </p>
 
                     {/* Facility name */}
@@ -198,11 +190,22 @@ export default async function EventsPage() {
                       {event.ageCategories?.join(", ") || "All"}
                     </p>
 
+                    {/* Duration */}
+                    <p>
+                      <span className="font-medium">Duration:</span>{" "}
+                      {event.durationDays} days
+                    </p>
+
                     {/* Division */}
                     <p>
                       <span className="font-medium">Division:</span>{" "}
                       {event.division}
                     </p>
+
+                    {/* Description */}
+                    {event.description && (
+                      <p className="text-muted-foreground mt-1">{event.description}</p>
+                    )}
                   </div>
 
                   {/* Registration Section */}
@@ -223,8 +226,8 @@ export default async function EventsPage() {
                   {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'update')) && (
                     <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex gap-2">
-                        <UpdateEventSheet 
-                          facilities={facilities} 
+                        <UpdateEventSheet
+                          facilities={facilities}
                           eventId={event._id.toString()}
                         >
                           <Button variant="outline" size="sm">
