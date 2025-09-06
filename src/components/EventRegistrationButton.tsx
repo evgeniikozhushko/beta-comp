@@ -50,6 +50,7 @@ export default function EventRegistrationButton({
       toast.error(result.error)
     }
   }
+  
   const handleUnregister = async () => {
     setIsLoading(true);
     const result = await unregisterFromEventAction(eventId);
@@ -61,6 +62,7 @@ export default function EventRegistrationButton({
       toast.error(result.error);
     }
   }
+
   // Registration deadline info
   const deadlineInfo = registrationDeadline ? (
     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
@@ -85,6 +87,7 @@ export default function EventRegistrationButton({
       <span>{registrationCount} registered</span>
     </div>
   );
+
   // If user is registered
   if (userRegistrationStatus === 'registered') {
     return (

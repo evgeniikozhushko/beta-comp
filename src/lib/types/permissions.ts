@@ -57,7 +57,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission> = {
     canDeleteAnyEvent: false,
     canManageEvents: false,
     canManageUsers: false,
-    canRegisterForEvents: false,
+    canRegisterForEvents: false, // Make true and separate from athletes.
   },
 };
 

@@ -11,11 +11,11 @@ export interface IEvent extends Document {
   ageCategories: string[]; // e.g. ["U12", "U18", "Open"]
   division: "Male" | "Female" | "Mixed";
   createdBy: Types.ObjectId; // → reference to User who created event
+  registrationDeadline: Date; // last date to sign up
 
   // Optional extras
   imageUrl?: string; // URL to banner/photo
   description?: string; // longer event details
-  registrationDeadline?: Date; // last date to sign up
   maxParticipants?: number; // cap on registrants
   entryFee?: number; // e.g. in cents or decimals
   contactEmail?: string; // event organizer

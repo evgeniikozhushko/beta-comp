@@ -1,4 +1,3 @@
-// src/components/EventForm.tsx
 "use client";
 
 import React, { useActionState, useEffect, useRef } from "react";
@@ -21,8 +20,8 @@ interface EventData {
   discipline: string;
   ageCategories: string[];
   division: string;
-  description?: string;
   registrationDeadline: string;
+  description?: string;
   maxParticipants?: number;
   entryFee?: number;
   contactEmail?: string;
@@ -55,13 +54,13 @@ function formatDateForInput(dateString?: string): string {
   return date.toISOString().slice(0, 16);
 }
 
-export default function EventForm({ 
-  facilities, 
-  mode = "create", 
-  eventData, 
-  resetOnSuccess = true, 
-  onPendingChange, 
-  onSuccess 
+export default function EventForm({
+  facilities,
+  mode = "create",
+  eventData,
+  resetOnSuccess = true,
+  onPendingChange,
+  onSuccess
 }: Props) {
   // Initialize form state with default values for error and pending
   const action = mode === "create" ? createEventAction : updateEventAction;
@@ -69,7 +68,7 @@ export default function EventForm({
     error: "",
     pending: false,
   });
-  
+
   const formRef = useRef<HTMLFormElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
@@ -247,8 +246,17 @@ export default function EventForm({
           id="registrationDeadline"
           name="registrationDeadline"
           type="date"
-          defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline : formatDateForInput(initialValues.registrationDeadline)}
+          min={new Date().toISOString().split('T')[0]} // Prevent past dates
+          defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline :
+            formatDateForInput(initialValues.registrationDeadline)}
         />
+        {/* Show field error if exists */}
+        {formState && 'fieldErrors' in formState && formState.fieldErrors?.registrationDeadline
+          && (
+            <p className="text-red-600 text-sm mt-1">
+              {formState.fieldErrors.registrationDeadline}
+            </p>
+          )}
       </div>
 
       {/* OPTIONAL FIELDS - no "required" attributes */}
@@ -328,8 +336,8 @@ export default function EventForm({
 
       {/* SUBMIT BUTTON */}
       <Button type="submit" className="w-full" disabled={formState?.pending}>
-        {formState?.pending 
-          ? (mode === "create" ? "Creating…" : "Updating…") 
+        {formState?.pending
+          ? (mode === "create" ? "Creating…" : "Updating…")
           : (mode === "create" ? "Create Event" : "Update Event")
         }
       </Button>

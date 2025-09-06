@@ -14,23 +14,23 @@ import Registration from '@/lib/models/Registration';
 export type CreateEventState =
   | { pending: false; success: true; id: string; name: string }
   | {
-      pending: false;
-      success?: false;
-      error?: string;
-      fieldErrors?: Record<string, string>;
-      // NEW: echo back what the user submitted so the client can rehydrate fields
-      values?: Record<string, unknown>;
-    };
+    pending: false;
+    success?: false;
+    error?: string;
+    fieldErrors?: Record<string, string>;
+    // NEW: echo back what the user submitted so the client can rehydrate fields
+    values?: Record<string, unknown>;
+  };
 
 export type UpdateEventState =
   | { pending: false; success: true; id: string; name: string }
   | {
-      pending: false;
-      success?: false;
-      error?: string;
-      fieldErrors?: Record<string, string>;
-      values?: Record<string, unknown>;
-    };
+    pending: false;
+    success?: false;
+    error?: string;
+    fieldErrors?: Record<string, string>;
+    values?: Record<string, unknown>;
+  };
 
 export type DeleteEventState =
   | { pending: false; success: true; id: string; name: string }
@@ -53,10 +53,19 @@ const EventCreateSchema = z.object({
   }),
   imageUrl: z.string().url().optional(),
   description: z.string().optional(),
-  registrationDeadline: z.string().optional(),
   maxParticipants: z.number().min(1).optional(),
   entryFee: z.number().min(0).optional(),
   contactEmail: z.string().email("That doesn't look like an email").optional(),
+  registrationDeadline: z.string().
+    refine((date) => {
+      // if (!date) return true; // Optional field, so undefined/empty is valid
+      const deadline = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+      return deadline >= today;
+    }, {
+      message: "Registration deadline must be today or in the future"
+    }),
 });
 
 export async function createEventAction(
@@ -120,6 +129,23 @@ export async function createEventAction(
       };
     }
     return { pending: false, error: "UNEXPECTED_SERVER", values: raw };
+  }
+
+  // Additional validation: ensure registration deadline is before event date
+  if (data.registrationDeadline) {
+    const registrationDeadline = new Date(data.registrationDeadline);
+    const eventDate = new Date(data.date);
+
+    if (registrationDeadline > eventDate) {
+      return {
+        pending: false,
+        error: "VALIDATION_REQUIRED",
+        fieldErrors: {
+          registrationDeadline: "Registration deadline must be before the event date"
+        },
+        values: raw,
+      };
+    }
   }
 
   try {
@@ -235,6 +261,23 @@ export async function updateEventAction(
     return { pending: false, error: "UNEXPECTED_SERVER", values: raw };
   }
 
+  // Additional validation: ensure registration deadline is before event date
+  if (data.registrationDeadline) {
+    const registrationDeadline = new Date(data.registrationDeadline);
+    const eventDate = new Date(data.date);
+
+    if (registrationDeadline > eventDate) {
+      return {
+        pending: false,
+        error: "VALIDATION_REQUIRED",
+        fieldErrors: {
+          registrationDeadline: "Registration deadline must be before the event date"
+        },
+        values: raw,
+      };
+    }
+  }
+
   try {
     // 4. DB operations
     await mongoConnect();
@@ -348,6 +391,7 @@ export async function deleteEventAction(
 // Register for event action
 export async function registerForEventAction(eventId: string) {
   try {
+
     // 1. Authentication check
     const session = await auth();
     if (!session) {
