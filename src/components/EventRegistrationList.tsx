@@ -56,7 +56,7 @@
                   {registration.status}
                 </Badge>
                 <div className="text-xs text-muted-foreground">
-                  {new Date(registration.registeredAt).toLocaleDateString()}
+                  {new Date(registration.registeredAt).toISOString().split('T')[0]}
                 </div>
               </div>
             </div>

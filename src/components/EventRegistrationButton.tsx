@@ -76,7 +76,7 @@ export default function EventRegistrationButton({
     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
       <Clock className="w-4 h-4" />
       <span>
-        Registration closes: {new Date(registrationDeadline).toLocaleDateString()}
+        Registration closes: {new Date(registrationDeadline).toISOString().split('T')[0]}
       </span>
     </div>
   ) : null;

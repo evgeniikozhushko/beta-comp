@@ -135,20 +135,6 @@ export default async function EventsPage() {
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
         
-        {/* Debug: Show events count */}
-        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded">
-          <strong>DEBUG:</strong> Found {(upcomingEvents as any[]).length} upcoming events
-          {(upcomingEvents as any[]).length === 0 && (
-            <div className="mt-2 text-sm">
-              <p>No upcoming events found. Check:</p>
-              <ul className="list-disc list-inside">
-                <li>Database has events with active: true</li>
-                <li>Events have dateTime field</li>
-                <li>MongoDB connection working</li>
-              </ul>
-            </div>
-          )}
-        </div>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -176,10 +162,10 @@ export default async function EventsPage() {
 
                 <div className="space-y-2 text-sm">
                   <div>
-                    <strong>Date:</strong> {new Date(event.date).toLocaleDateString()}
+                    <strong>Date:</strong> {new Date(event.date).toISOString().split('T')[0]}
                   </div>
                   <div>
-                    <strong>Time:</strong> {new Date(event.date).toLocaleTimeString()}
+                    <strong>Time:</strong> {new Date(event.date).toISOString().split('T')[1].split('.')[0]}
                   </div>
                   <div>
                     <strong>Location:</strong> {event.location || (event.facility?.name)}
@@ -191,20 +177,6 @@ export default async function EventsPage() {
                   )}
                 </div>
 
-                {/* Debug: Show component props */}
-                <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-                  <strong>Event {eventId.slice(-6)}:</strong> Status={eventStatus}, 
-                  UserStatus={userRegistrationStatus || 'null'}, 
-                  Auth={!!session ? 'Yes' : 'No'}, 
-                  CanReg={userCanRegister ? 'Yes' : 'No'}
-                </div>
-                
-                {/* Simple test button to verify rendering location */}
-                <div className="p-3 bg-green-100 border-2 border-green-400 rounded mb-2">
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                    TEST: Simple Button Works Here
-                  </button>
-                </div>
                 
                 <EventRegistrationButton
                   eventId={eventId}
@@ -275,11 +247,8 @@ export default async function EventsPage() {
                 {/* Date and time display */}
                 <p>
                   <span className="font-medium">Date:</span>{" "}
-                  {new Date(event.date).toLocaleDateString()} at{" "}
-                  {new Date(event.date).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {new Date(event.date).toISOString().split('T')[0]} at{" "}
+                  {new Date(event.date).toISOString().split('T')[1].split('.')[0]}
                 </p>
 
                 {/* Duration */}
