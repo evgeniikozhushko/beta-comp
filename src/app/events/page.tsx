@@ -45,21 +45,18 @@ export default async function EventsPage() {
     redirect("/sign-in");
   }
 
-  let rawEvents: unknown[], rawFacilities: unknown[], upcomingEvents: unknown[];
+  let rawEvents: unknown[], rawFacilities: unknown[];
   try {
     // 2. Connect to database
     await mongoConnect();
 
-    // 3. Fetch events (with facility populated), facilities, and upcoming events in parallel
-    [rawEvents, rawFacilities, upcomingEvents] = await Promise.all([
+    // 3. Fetch events (with facility populated) and facilities in parallel
+    [rawEvents, rawFacilities] = await Promise.all([
       Event.find()
         .populate("facility") // Replace facility ID with full document
         .sort({ date: 1 }) // Sort events by date ascending
         .lean(), // Convert Mongoose docs to plain JS objects
       Facility.find().lean(), // Fetch all facilities
-      Event.find()
-        .sort({ date: 1 })
-        .lean() // Get upcoming events for registration
     ]);
   } catch (error) {
     // 4. Error boundary: if fetching fails, show an error message
@@ -85,20 +82,20 @@ export default async function EventsPage() {
       : `${f.name} — ${f.province}`, // Include location
   }));
 
-   // Get user's registrations if authenticated
-   let userRegistrations: any[] = [];
-   if (session) {
-     userRegistrations = await Registration.find({
-       userId: new Types.ObjectId(session.user.id),
-       status: { $in: ['registered', 'waitlisted'] }
-     }).lean();
-   }
+  // Get user's registrations if authenticated
+  let userRegistrations: any[] = [];
+  if (session) {
+    userRegistrations = await Registration.find({
+      userId: new Types.ObjectId(session.user.id),
+      status: { $in: ['registered', 'waitlisted'] }
+    }).lean();
+  }
 
-   // Create registration lookup
-   const registrationLookup = userRegistrations.reduce((acc, reg) => {
-    acc[reg.eventId.toString()] = reg.status;
-    return acc;
-  }, {});
+  // Create registration lookup
+  const registrationLookup: Record<string, string> = {};
+  userRegistrations.forEach((reg) => {
+    registrationLookup[reg.eventId.toString()] = reg.status;
+  });
 
   // Check if user can register for events
   const userCanRegister = session ? hasPermission(session.user.role, 'canRegisterForEvents') : false;
@@ -131,171 +128,124 @@ export default async function EventsPage() {
         </div>
       )}
 
-{/* Upcoming Events with Registration */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
-        
-        
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {(upcomingEvents as any[]).map((event: any) => {
-            const eventId = event._id.toString();
-            const userRegistrationStatus = registrationLookup[eventId] || null;
-            
-            // Implement registration status logic inline (since lean documents don't have methods)
-            const getEventRegistrationStatus = (event: any) => {
-              // Default to allowing registration if field doesn't exist
-              if (event.allowRegistration === false) return 'closed';
-              if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) return 'closed';
-              if (event.maxCapacity > 0 && (event.registrationCount || 0) >= event.maxCapacity) return 'full';
-              return 'open';
-            };
-            
-            const eventStatus = getEventRegistrationStatus(event);
+      {/* Unified Events with Registration and Admin Controls */}
+      <div>
+        {rawEvents.length === 0 ? (
+          <p className="text-gray-600">No events found.</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {rawEvents.map((event: any) => {
+              const eventId = event._id.toString();
+              const userRegistrationStatus = registrationLookup[eventId] || null;
+              
+              // Implement registration status logic inline (since lean documents don't have methods)
+              const getEventRegistrationStatus = (event: any) => {
+                // Default to allowing registration if field doesn't exist
+                if (event.allowRegistration === false) return 'closed';
+                if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) return 'closed';
+                if (event.maxCapacity > 0 && (event.registrationCount || 0) >= event.maxCapacity) return 'full';
+                return 'open';
+              };
+              
+              const eventStatus = getEventRegistrationStatus(event);
 
-            return (
-              <div key={eventId} className="border rounded-lg p-6 space-y-4">
-                <div>
-                  <h2 className="text-xl font-semibold">{event.title || event.name}</h2>
-                  <p className="text-muted-foreground">{event.description}</p>
-                </div>
+              return (
+                <div
+                  key={eventId}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4 hover:shadow-lg transition-shadow relative"
+                >
+                  {/* Event Header */}
+                  <div>
+                    <h2 className="text-xl font-semibold">{event.name}</h2>
+                    {event.description && (
+                      <p className="text-muted-foreground mt-1">{event.description}</p>
+                    )}
+                  </div>
 
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <strong>Date:</strong> {new Date(event.date).toISOString().split('T')[0]}
+                  {/* Event Details */}
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    {/* Date and time display */}
+                    <p>
+                      <span className="font-medium">Date:</span>{" "}
+                      {new Date(event.date).toISOString().split('T')[0]} at{" "}
+                      {new Date(event.date).toISOString().split('T')[1].split('.')[0]}
+                    </p>
+
+                    {/* Duration */}
+                    <p>
+                      <span className="font-medium">Duration:</span>{" "}
+                      {event.durationDays} days
+                    </p>
+
+                    {/* Facility name */}
+                    <p>
+                      <span className="font-medium">Facility:</span>{" "}
+                      {typeof event.facility === "object" && event.facility?.name
+                        ? event.facility.name
+                        : "Unknown"}
+                    </p>
+
+                    {/* Discipline */}
+                    <p>
+                      <span className="font-medium">Discipline:</span>{" "}
+                      {event.discipline}
+                    </p>
+
+                    {/* Age categories */}
+                    <p>
+                      <span className="font-medium">Categories:</span>{" "}
+                      {event.ageCategories?.join(", ") || "All"}
+                    </p>
+
+                    {/* Division */}
+                    <p>
+                      <span className="font-medium">Division:</span>{" "}
+                      {event.division}
+                    </p>
                   </div>
-                  <div>
-                    <strong>Time:</strong> {new Date(event.date).toISOString().split('T')[1].split('.')[0]}
+
+                  {/* Registration Section */}
+                  <div className="pt-2">
+                    <EventRegistrationButton
+                      eventId={eventId}
+                      userRegistrationStatus={userRegistrationStatus}
+                      eventStatus={eventStatus}
+                      registrationCount={event.registrationCount || 0}
+                      maxCapacity={event.maxCapacity || 0}
+                      registrationDeadline={event.registrationDeadline}
+                      isAuthenticated={!!session}
+                      userCanRegister={userCanRegister}
+                    />
                   </div>
-                  <div>
-                    <strong>Location:</strong> {event.location || (event.facility?.name)}
-                  </div>
-                  {(event.sport || event.discipline) && (
-                    <div>
-                      <strong>Sport:</strong> {event.sport || event.discipline}
+
+                  {/* Admin Controls - Only show if user can manage events */}
+                  {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'update')) && (
+                    <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex gap-2">
+                        <UpdateEventSheet 
+                          facilities={facilities} 
+                          eventId={event._id.toString()}
+                        >
+                          <Button variant="outline" size="sm">
+                            Edit Event
+                          </Button>
+                        </UpdateEventSheet>
+                        {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'delete')) && (
+                          <DeleteEventButton
+                            eventId={event._id.toString()}
+                            eventName={event.name}
+                          />
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-
-                
-                <EventRegistrationButton
-                  eventId={eventId}
-                  userRegistrationStatus={userRegistrationStatus}
-                  eventStatus={eventStatus}
-                  registrationCount={event.registrationCount || 0}
-                  maxCapacity={event.maxCapacity || 0}
-                  registrationDeadline={event.registrationDeadline}
-                  isAuthenticated={!!session}
-                  userCanRegister={userCanRegister}
-                />
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-
-      {/* Admin Event Management Section */}
-      {(session.user.role && hasPermission(session.user.role, 'canCreateEvents')) && (
-        <div>
-          {rawEvents.length === 0 ? (
-            <p className="text-gray-600">No events found.</p>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {rawEvents.map((event: any) => (
-            <div
-              key={String(event._id)}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 pb-20 hover:shadow-lg transition-shadow relative"
-            >
-              {/* Action buttons - role-based permissions */}
-              {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'update')) && (
-                <div className="absolute bottom-6 left-4 flex gap-2">
-                  <UpdateEventSheet 
-                    facilities={facilities} 
-                    eventId={event._id.toString()}
-                  >
-                    <Button variant="outline" size="sm">
-                      Edit Event
-                    </Button>
-                  </UpdateEventSheet>
-                  {(session.user.role && canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'delete')) && (
-                    <DeleteEventButton
-                      eventId={event._id.toString()}
-                      eventName={event.name}
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Debug info */}
-              {/* <div className="text-xs text-gray-500 mt-2 bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                <strong>Event Owner ID:</strong> {event.createdBy.toString()}
-                <br />
-                <strong>Your User ID:</strong> {session.user.id}
-                <br />
-                <strong>You own this event:</strong>{" "}
-                <span className={event.createdBy.toString() === session.user.id ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
-                  {event.createdBy.toString() === session.user.id ? "YES" : "NO"}
-                </span>
-              </div> */}
-
-              {/* Event title */}
-              <h2 className="text-xl font-semibold mb-2">{event.name}</h2>
-
-              {/* Event details */}
-              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                {/* Date and time display */}
-                <p>
-                  <span className="font-medium">Date:</span>{" "}
-                  {new Date(event.date).toISOString().split('T')[0]} at{" "}
-                  {new Date(event.date).toISOString().split('T')[1].split('.')[0]}
-                </p>
-
-                {/* Duration */}
-                <p>
-                  <span className="font-medium">Duration:</span>{" "}
-                  {event.durationDays} days
-                </p>
-
-                {/* Facility name, type-safe check */}
-                <p>
-                  <span className="font-medium">Facility:</span>{" "}
-                  {typeof event.facility === "object" && event.facility?.name
-                    ? event.facility.name
-                    : "Unknown"}
-                </p>
-
-                {/* Discipline */}
-                <p>
-                  <span className="font-medium">Discipline:</span>{" "}
-                  {event.discipline}
-                </p>
-
-                {/* Age categories */}
-                <p>
-                  <span className="font-medium">Categories:</span>{" "}
-                  {event.ageCategories.join(", ")}
-                </p>
-
-                {/* Division */}
-                <p>
-                  <span className="font-medium">Division:</span>{" "}
-                  {event.division}
-                </p>
-
-                {/* Optional description block */}
-                {event.description && (
-                  <p className="mt-3 text-gray-800 dark:text-gray-200">
-                    {event.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
