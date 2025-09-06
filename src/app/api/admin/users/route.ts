@@ -50,6 +50,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<UserListRe
         await mongoConnect();
   
         // 5. Build query filters
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const query: any = {};
         if (search) {
           query.$or = [

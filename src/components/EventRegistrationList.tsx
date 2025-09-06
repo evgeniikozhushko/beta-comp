@@ -10,6 +10,7 @@
   }
 
   export default function EventRegistrationList({ eventId }: EventRegistrationListProps) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [registrations, setRegistrations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 

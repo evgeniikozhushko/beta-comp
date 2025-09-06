@@ -58,6 +58,7 @@ RegistrationSchema.statics.isUserRegistered = function (userId: Types.ObjectId, 
 
 // Static method to get user's registrations
 RegistrationSchema.statics.getUserRegistrations = function (userId: Types.ObjectId, status?: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = { userId };
     if (status) query.status = status;
 
@@ -68,6 +69,7 @@ RegistrationSchema.statics.getUserRegistrations = function (userId: Types.Object
 
 // Static method to get event registrations with user details
 RegistrationSchema.statics.getEventRegistrations = function (eventId: Types.ObjectId, status?: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query: any = { eventId };
     if (status) query.status = status;
 

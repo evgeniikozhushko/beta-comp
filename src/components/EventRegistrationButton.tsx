@@ -29,16 +29,6 @@ export default function EventRegistrationButton({
 }: EventRegistrationButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  -    // Debug: ensure component renders something
-    console.log('EventRegistrationButton rendering with:', {
-      eventId,
-      userRegistrationStatus,
-      eventStatus,
-      isAuthenticated,
-      userCanRegister
-    });
-
-
   const handleRegister = async () => {
     if (!isAuthenticated) {
       toast.error('Please login to register for this event');

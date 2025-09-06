@@ -83,6 +83,7 @@ export default async function EventsPage() {
   }));
 
   // Get user's registrations if authenticated
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let userRegistrations: any[] = [];
   if (session) {
     userRegistrations = await Registration.find({
@@ -140,6 +141,7 @@ export default async function EventsPage() {
               const userRegistrationStatus = registrationLookup[eventId] || null;
 
               // Implement registration status logic inline (since lean documents don't have methods)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const getEventRegistrationStatus = (event: any) => {
                 // Default to allowing registration if field doesn't exist
                 if (event.allowRegistration === false) return 'closed';

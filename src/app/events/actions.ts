@@ -555,6 +555,7 @@ export async function getEventRegistrations(eventId: string) {
       return { success: false, error: 'Invalid event ID' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const registrations = await (Registration as any).getEventRegistrations(
       new Types.ObjectId(eventId)
     );
