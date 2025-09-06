@@ -1,11 +1,11 @@
 // src/components/EventForm.tsx
 "use client";
 
+import React, { useActionState, useEffect, useRef } from "react";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 import { createEventAction, updateEventAction } from "@/app/events/actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useActionState, useEffect, useRef } from "react";
 
 interface FacilityOption {
   id: string;
@@ -22,7 +22,7 @@ interface EventData {
   ageCategories: string[];
   division: string;
   description?: string;
-  registrationDeadline?: string;
+  registrationDeadline: string;
   maxParticipants?: number;
   entryFee?: number;
   contactEmail?: string;
@@ -236,6 +236,21 @@ export default function EventForm({
         </select>
       </div>
 
+      <div>
+        <label
+          htmlFor="registrationDeadline"
+          className="block text-sm font-medium mb-1"
+        >
+          Registration Deadline
+        </label>
+        <Input
+          id="registrationDeadline"
+          name="registrationDeadline"
+          type="date"
+          defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline : formatDateForInput(initialValues.registrationDeadline)}
+        />
+      </div>
+
       {/* OPTIONAL FIELDS - no "required" attributes */}
       <div>
         <label htmlFor="description" className="block text-sm font-medium mb-1">
@@ -247,21 +262,6 @@ export default function EventForm({
           rows={3}
           className="flex h-24 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
           defaultValue={typeof v?.description === 'string' ? v.description : initialValues.description || ""}
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="registrationDeadline"
-          className="block text-sm font-medium mb-1"
-        >
-          Registration Deadline (optional)
-        </label>
-        <Input
-          id="registrationDeadline"
-          name="registrationDeadline"
-          type="date"
-          defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline : formatDateForInput(initialValues.registrationDeadline)}
         />
       </div>
 
