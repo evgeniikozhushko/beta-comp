@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function Home() {
   // Check if user is authenticated
@@ -18,8 +19,12 @@ export default async function Home() {
   console.log('User authenticated:', session.user.displayName);
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div>
+      {/* Header */}
+      <PageHeader user={session.user} />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
 
         {/* Welcome Section */}
         <div className="text-start mb-12">
@@ -88,6 +93,7 @@ text-primary-foreground hover:bg-primary/90 h-10 px-8 font-medium transition-col
             Get Started
           </Link>
         </div> */}
+        </div>
       </div>
     </div>
   );
