@@ -38,7 +38,7 @@ export default async function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold">Welcome back, {session.user.displayName}</h1>
             <p className="text-muted-foreground">
-              Here&apos;s what&apos;s happening with your competitions
+              Your central hub for managing your competitions
             </p>
           </div>
           <Badge variant={isAdmin ? "default" : "secondary"} className="capitalize">

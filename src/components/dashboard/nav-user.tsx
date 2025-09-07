@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import {
   SidebarMenu,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { User } from "@/lib/auth"
@@ -20,6 +21,8 @@ interface NavUserProps {
 }
 
 export function NavUser({ user }: NavUserProps) {
+  const { state } = useSidebar()
+  
   // Create user initials for avatar fallback
   const getInitials = (name: string) => {
     return name
@@ -54,37 +57,52 @@ export function NavUser({ user }: NavUserProps) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <div className="flex items-center gap-2 px-1 py-1.5">
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage
-              src={user.picture || ""}
-              alt={user.displayName}
-            />
-            <AvatarFallback className="rounded-lg">
-              {getInitials(user.displayName)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">{user.displayName}</span>
-            <div className="flex items-center gap-2">
-              <span className="truncate text-xs">{user.email}</span>
-              <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
-                {user.role}
-              </Badge>
+        {state === "expanded" ? (
+          <>
+            <div className="flex items-center gap-2 px-1 py-1.5">
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage
+                  src={user.picture || ""}
+                  alt={user.displayName}
+                />
+                <AvatarFallback className="rounded-lg">
+                  {getInitials(user.displayName)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{user.displayName}</span>
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-xs">{user.email}</span>
+                  <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
+                    {user.role}
+                  </Badge>
+                </div>
+              </div>
             </div>
+            <div className="px-1 py-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="w-full justify-start"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center px-1 py-1.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="h-8 w-8"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-        <div className="px-1 py-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleSignOut}
-            className="w-full justify-start"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Log out
-          </Button>
-        </div>
+        )}
       </SidebarMenuItem>
     </SidebarMenu>
   )
