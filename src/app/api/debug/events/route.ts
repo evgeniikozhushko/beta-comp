@@ -1,7 +1,6 @@
 import { mongoConnect } from '@/lib/mongodb';
 import Event from '@/lib/models/Event';
 import Registration from '@/lib/models/Registration';
-import Facility from '@/lib/models/Facility';
 import { NextResponse } from 'next/server';
 
 export async function GET() {

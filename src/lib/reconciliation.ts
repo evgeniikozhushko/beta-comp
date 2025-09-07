@@ -152,7 +152,7 @@ export async function reconcileRegistrationCounts(
 /**
  * Check counts for a specific event
  */
-async function checkEventCounts(event: any): Promise<EventDiscrepancy | null> {
+async function checkEventCounts(event: Record<string, unknown> & { _id: unknown }): Promise<EventDiscrepancy | null> {
   // Get actual counts from Registration collection
   const [actualRegistered, actualWaitlisted] = await Promise.all([
     Registration.countDocuments({
@@ -166,8 +166,8 @@ async function checkEventCounts(event: any): Promise<EventDiscrepancy | null> {
   ]);
 
   // Get stored counts from Event document
-  const storedRegistered = event.registrationCount || 0;
-  const storedWaitlisted = event.waitlistCount || 0;
+  const storedRegistered = Number(event.registrationCount) || 0;
+  const storedWaitlisted = Number(event.waitlistCount) || 0;
 
   // Calculate differences
   const registeredDiff = actualRegistered - storedRegistered;
@@ -176,9 +176,9 @@ async function checkEventCounts(event: any): Promise<EventDiscrepancy | null> {
   // Return discrepancy if counts don't match
   if (registeredDiff !== 0 || waitlistedDiff !== 0) {
     return {
-      eventId: event._id.toString(),
-      eventName: event.name,
-      eventDate: event.date.toISOString(),
+      eventId: String(event._id),
+      eventName: String(event.name),
+      eventDate: new Date(event.date as Date).toISOString(),
       storedRegistered,
       actualRegistered,
       storedWaitlisted,

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         eventId: body.eventId || undefined,
         includeOrphaned: body.includeOrphaned ?? true
       };
-    } catch (error) {
+    } catch {
       // Use defaults if JSON parsing fails
       console.log('Using default options for reconciliation');
     }

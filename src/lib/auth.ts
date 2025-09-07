@@ -138,7 +138,7 @@ export async function auth(): Promise<Session | null> {
     } else {
       // User exists in database, check if their info is up to date
       let needsUpdate = false;
-      const updates: any = {};
+      const updates: Partial<Pick<User, 'displayName' | 'email' | 'picture' | 'role'>> = {};
       
       if (decoded.displayName && userInDb.displayName !== decoded.displayName) {
         updates.displayName = decoded.displayName;

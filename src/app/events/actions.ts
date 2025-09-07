@@ -314,9 +314,9 @@ export async function createEventAction(
     // Handle Mongoose validation errors
     if (err && typeof err === 'object' && 'name' in err && err.name === 'ValidationError') {
       console.log("❌ Mongoose validation error");
-      const validationErr = err as any;
-      const fieldErrors = Object.keys(validationErr.errors || {}).reduce((acc: any, key) => {
-        acc[key] = validationErr.errors[key].message;
+      const validationErr = err as { errors?: Record<string, { message: string }> };
+      const fieldErrors = Object.keys(validationErr.errors || {}).reduce((acc: Record<string, string>, key) => {
+        acc[key] = validationErr.errors?.[key]?.message || 'Validation error';
         return acc;
       }, {});
       console.log("❌ Field validation errors:", fieldErrors);
