@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Types } from "mongoose";
-import { mongoConnect } from "@/lib/mongodb";
+import { mongoConnect, withTransaction } from "@/lib/mongodb";
 import Event, { IEvent } from "@/lib/models/Event";
 import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
@@ -56,9 +56,9 @@ const EventCreateSchema = z.object({
   maxParticipants: z.number().min(1).optional(),
   entryFee: z.number().min(0).optional(),
   contactEmail: z.string().email("That doesn't look like an email").optional(),
-  registrationDeadline: z.string().
+  registrationDeadline: z.string().optional().
     refine((date) => {
-      // if (!date) return true; // Optional field, so undefined/empty is valid
+      if (!date) return true; // Optional field, so undefined/empty is valid
       const deadline = new Date(date);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
@@ -72,18 +72,29 @@ export async function createEventAction(
   _prevState: unknown,
   formData: FormData
 ): Promise<CreateEventState> {
+  console.log('🎯 Starting event creation process...');
+  
   // 1. Auth guard (no redirect here—return an error for the form)
+  console.log('🔐 Checking authentication...');
   const session = await auth();
   if (!session) {
+    console.log('❌ Authentication failed - no session');
     return { pending: false, error: "UNAUTHORIZED" };
   }
+  
+  console.log('✅ Authentication successful:', session.user.displayName, session.user.id);
 
   // 2. Permission check - user must be able to create events
+  console.log('👮 Checking permissions for role:', session.user.role);
   if (!hasPermission(session.user.role, 'canCreateEvents')) {
+    console.log('❌ Permission denied for role:', session.user.role);
     return { pending: false, error: "PERMISSION_DENIED" };
   }
+  
+  console.log('✅ Permission check passed');
 
   // 2. Extract and normalize raw data from FormData
+  console.log('📝 Extracting form data...');
   const raw: Record<string, unknown> = {
     name: formData.get("name"),
     date: formData.get("date"),
@@ -104,17 +115,26 @@ export async function createEventAction(
     contactEmail: formData.get("contactEmail") || undefined,
   };
 
+  console.log('📋 Raw form data:', JSON.stringify(raw, null, 2));
+
   // Remove empty strings → undefined (so Zod optional fields behave)
   for (const [k, v] of Object.entries(raw)) if (v === "") raw[k] = undefined;
+  
+  console.log('🧹 Cleaned form data:', JSON.stringify(raw, null, 2));
 
   // 3. Zod validation → map to fieldErrors for inline display
+  console.log('🔍 Starting Zod validation...');
   let data: z.infer<typeof EventCreateSchema>;
 
   try {
     data = EventCreateSchema.parse(raw);
+    console.log('✅ Zod validation passed');
+    console.log('📊 Validated data:', JSON.stringify(data, null, 2));
   } catch (err) {
+    console.log('❌ Zod validation failed:', err);
     if (err instanceof z.ZodError) {
       const flat = err.flatten();
+      console.log('📝 Validation errors:', JSON.stringify(flat.fieldErrors, null, 2));
       const fieldErrors = Object.fromEntries(
         Object.entries(flat.fieldErrors).map(([k, v]) => [
           k,
@@ -128,6 +148,7 @@ export async function createEventAction(
         values: raw,
       };
     }
+    console.log('❌ Unexpected validation error:', err);
     return { pending: false, error: "UNEXPECTED_SERVER", values: raw };
   }
 
@@ -150,9 +171,14 @@ export async function createEventAction(
 
   try {
     // 4. DB: verify facility exists
+    console.log('🔌 Connecting to MongoDB...');
     await mongoConnect();
+    console.log('✅ MongoDB connection successful');
+    
+    console.log('🏢 Verifying facility exists:', data.facility);
     const facilityDoc = await Facility.findById(data.facility);
     if (!facilityDoc) {
+      console.log('❌ Facility not found:', data.facility);
       return {
         pending: false,
         error: "INVALID_FACILITY",
@@ -160,39 +186,148 @@ export async function createEventAction(
         values: raw,
       };
     }
+    console.log('✅ Facility verified:', facilityDoc.name);
 
-    // 5. Create event (convert string ids → ObjectId)
-    const newEvent = await Event.create({
-      name: data.name,
-      date: new Date(data.date),
-      durationDays: data.durationDays,
-      facility: new Types.ObjectId(data.facility),
-      discipline: data.discipline,
-      ageCategories: data.ageCategories,
-      division: data.division,
-      imageUrl: data.imageUrl,
-      description: data.description,
-      registrationDeadline: data.registrationDeadline
-        ? new Date(data.registrationDeadline)
-        : undefined,
-      maxParticipants: data.maxParticipants,
-      entryFee: data.entryFee,
-      contactEmail: data.contactEmail,
-      createdBy: new Types.ObjectId(session.user.id),
-    } as Partial<IEvent>);
+    // 5. Verify user exists or create if missing (fix for authentication-database mismatch)
+    console.log('👤 Verifying user exists for createdBy field:', session.user.id);
+    const User = (await import('@/lib/models/User')).default;
+    let userDoc = await User.findById(session.user.id);
+    
+    if (!userDoc) {
+      console.log('❌ User not found in database:', session.user.id);
+      console.log('🔧 Attempting to create missing user from session data...');
+      
+      // Try to create the user from session data if we have enough information
+      if (session.user.email && session.user.displayName) {
+        try {
+          userDoc = await User.create({
+            _id: session.user.id, // Use the same ID from the session
+            googleId: session.user.googleId,
+            displayName: session.user.displayName,
+            email: session.user.email,
+            picture: session.user.picture,
+            role: session.user.role,
+          });
+          console.log('✅ Successfully created missing user:', userDoc.displayName);
+        } catch (createError) {
+          console.error('❌ Failed to create missing user:', createError);
+          return {
+            pending: false,
+            error: "USER_CREATION_FAILED", 
+            values: raw,
+          };
+        }
+      } else {
+        console.log('❌ Cannot create user - insufficient session data');
+        return {
+          pending: false,
+          error: "USER_SESSION_INCOMPLETE",
+          values: raw,
+        };
+      }
+    }
+    console.log('✅ User verified/created:', userDoc.displayName, userDoc.email);
 
-    // 6. Mark the /events route stale (fresh data will be ready)
+    // 6. Create event within transaction for atomicity
+    console.log('🔄 Starting transaction for event creation...');
+    const result = await withTransaction(async (mongoSession) => {
+      console.log('💾 Creating event in database within transaction...');
+      const eventData = {
+        name: data.name,
+        date: new Date(data.date),
+        durationDays: data.durationDays,
+        facility: new Types.ObjectId(data.facility),
+        discipline: data.discipline,
+        ageCategories: data.ageCategories,
+        division: data.division,
+        imageUrl: data.imageUrl,
+        description: data.description,
+        registrationDeadline: data.registrationDeadline
+          ? new Date(data.registrationDeadline)
+          : undefined,
+        maxParticipants: data.maxParticipants,
+        entryFee: data.entryFee,
+        contactEmail: data.contactEmail,
+        createdBy: new Types.ObjectId(session.user.id),
+      } as Partial<IEvent>;
+      
+      console.log('📝 Event data to be created:', JSON.stringify(eventData, null, 2));
+      
+      const newEvent = await Event.create([eventData], { session: mongoSession });
+      console.log('✅ Event creation completed within transaction');
+      console.log('📄 Created event:', JSON.stringify({
+        id: newEvent[0]._id,
+        name: newEvent[0].name,
+        date: newEvent[0].date,
+        facility: newEvent[0].facility
+      }, null, 2));
+
+      // 7. Verify event was actually saved within transaction
+      console.log('🔍 Verifying event was saved to database...');
+      const savedEvent = await Event.findById(newEvent[0]._id).session(mongoSession);
+      if (!savedEvent) {
+        console.log('❌ Event creation succeeded but verification failed - event not found in database');
+        throw new Error('Event was created but could not be verified in database');
+      }
+      console.log('✅ Event verification successful - event exists in database');
+      
+      return newEvent[0];
+    });
+
+    console.log('✅ Transaction completed successfully');
+
+    // 8. Mark the /events route stale (fresh data will be ready)
+    console.log('🔄 Revalidating /events path...');
     revalidatePath("/events");
 
-    // 7. Return success (no redirect) → client decides what to do
+    // 9. Return success (no redirect) → client decides what to do
+    console.log('🎉 Event creation process completed successfully');
     return {
       pending: false,
       success: true,
-      id: newEvent._id.toString(),
-      name: newEvent.name,
+      id: result._id.toString(),
+      name: result.name,
     };
   } catch (err) {
-    console.error("Event creation failed:", err);
+    console.error("❌ Event creation failed:", err);
+    console.error("❌ Error type:", typeof err);
+    console.error("❌ Error instance:", err instanceof Error);
+    
+    if (err instanceof Error) {
+      console.error("❌ Error message:", err.message);
+      console.error("❌ Error stack:", err.stack);
+    }
+    
+    if (err && typeof err === 'object') {
+      console.error("❌ Error object keys:", Object.keys(err));
+      console.error("❌ Full error object:", JSON.stringify(err, null, 2));
+    }
+
+    // Handle specific MongoDB errors
+    if (err && typeof err === 'object' && 'code' in err) {
+      if (err.code === 11000) {
+        console.log("❌ Duplicate key error - event might already exist");
+        return { pending: false, error: "DUPLICATE_EVENT", values: raw };
+      }
+    }
+
+    // Handle Mongoose validation errors
+    if (err && typeof err === 'object' && 'name' in err && err.name === 'ValidationError') {
+      console.log("❌ Mongoose validation error");
+      const validationErr = err as any;
+      const fieldErrors = Object.keys(validationErr.errors || {}).reduce((acc: any, key) => {
+        acc[key] = validationErr.errors[key].message;
+        return acc;
+      }, {});
+      console.log("❌ Field validation errors:", fieldErrors);
+      return {
+        pending: false,
+        error: "VALIDATION_REQUIRED",
+        fieldErrors,
+        values: raw,
+      };
+    }
+
     return { pending: false, error: "DB_ERROR", values: raw };
   }
 }
@@ -398,6 +533,15 @@ export async function registerForEventAction(eventId: string) {
       return { success: false, error: 'Authentication required' };
     }
 
+    // Debug session structure
+    console.log('Session object:', JSON.stringify(session, null, 2));
+    console.log('Session user ID:', session.user?.id);
+    
+    if (!session.user?.id) {
+      console.error('Session user ID is missing!', session.user);
+      return { success: false, error: 'Session error: user ID not found' };
+    }
+
     // 2. Permission check - only athletes and officials can register
     // Admins cannot register per recent permission update
     if (!hasPermission(session.user.role, 'canRegisterForEvents')) {
@@ -426,54 +570,162 @@ export async function registerForEventAction(eventId: string) {
       return { success: false, error: 'Registration is closed for this event' };
     }
 
-    // 7. Check if user is already registered
-    const existingRegistration = await Registration.findOne({
-      userId: new Types.ObjectId(session.user.id),
-      eventId: new Types.ObjectId(eventId),
-      status: { $in: ['registered', 'waitlisted'] }
-    });
-
-    if (existingRegistration) {
-      return {
-        success: false,
-        error: `You are already ${existingRegistration.status} for this event`
-      };
+    // 7. Verify user exists in database or create if missing (same fix as event creation)
+    console.log('👤 Verifying user exists for registration:', session.user.id);
+    const User = (await import('@/lib/models/User')).default;
+    let userDoc = await User.findById(session.user.id);
+    
+    if (!userDoc) {
+      console.log('❌ User not found in database during registration:', session.user.id);
+      console.log('🔧 Attempting to create missing user from session data...');
+      
+      if (session.user.email && session.user.displayName) {
+        try {
+          userDoc = await User.create({
+            _id: session.user.id,
+            googleId: session.user.googleId,
+            displayName: session.user.displayName,
+            email: session.user.email,
+            picture: session.user.picture,
+            role: session.user.role,
+          });
+          console.log('✅ Successfully created missing user for registration:', userDoc.displayName);
+        } catch (createError) {
+          console.error('❌ Failed to create missing user for registration:', createError);
+          return { success: false, error: 'User account setup failed' };
+        }
+      } else {
+        console.log('❌ Cannot create user - insufficient session data for registration');
+        return { success: false, error: 'Incomplete user session data' };
+      }
     }
+    console.log('✅ User verified/created for registration:', userDoc.displayName, userDoc.email);
 
-    // 8. Determine registration status based on capacity
-    const registrationStatus = event.hasCapacity() ? 'registered' : 'waitlisted';
+    // 8. Execute registration within transaction for atomicity
+    console.log('🔄 Starting transaction for registration...');
+    const result = await withTransaction(async (mongoSession) => {
+      console.log('📋 Inside transaction, checking existing registration...');
+      
+      // Re-check if user is already registered (within transaction)
+      const existingRegistration = await Registration.findOne({
+        userId: new Types.ObjectId(session.user.id),
+        eventId: new Types.ObjectId(eventId),
+        status: { $in: ['registered', 'waitlisted'] }
+      }).session(mongoSession);
 
-    // 9. Create registration
-    const registration = new Registration({
-      userId: new Types.ObjectId(session.user.id),
-      eventId: new Types.ObjectId(eventId),
-      status: registrationStatus
+      console.log('🔍 Existing registration check:', existingRegistration ? 'FOUND' : 'NONE');
+
+      if (existingRegistration) {
+        throw new Error(`You are already ${existingRegistration.status} for this event`);
+      }
+
+      // Get current registration counts within transaction (prevents race conditions)
+      console.log('📊 Getting current registration counts...');
+      const currentRegisteredCount = await Registration.countDocuments({
+        eventId: new Types.ObjectId(eventId),
+        status: 'registered'
+      }).session(mongoSession);
+
+      const currentWaitlistCount = await Registration.countDocuments({
+        eventId: new Types.ObjectId(eventId),
+        status: 'waitlisted'
+      }).session(mongoSession);
+
+      console.log(`📈 Current counts - Registered: ${currentRegisteredCount}, Waitlisted: ${currentWaitlistCount}`);
+      console.log(`🎯 Event capacity: ${event.maxCapacity}`);
+
+      // Determine registration status based on current capacity
+      const registrationStatus = (event.maxCapacity === 0 || currentRegisteredCount < event.maxCapacity) 
+        ? 'registered' 
+        : 'waitlisted';
+
+      console.log(`✅ Registration status determined: ${registrationStatus}`);
+
+      // Create registration
+      console.log('💾 Creating registration document...');
+      const registrationData = {
+        userId: new Types.ObjectId(session.user.id),
+        eventId: new Types.ObjectId(eventId),
+        status: registrationStatus
+      };
+      
+      console.log('📝 Registration data:', JSON.stringify(registrationData, null, 2));
+      
+      const registration = await Registration.create([registrationData], { session: mongoSession });
+      
+      console.log('✅ Registration created:', registration[0] ? 'SUCCESS' : 'FAILED');
+      console.log('📄 Registration document:', JSON.stringify(registration[0], null, 2));
+
+      // Update event counts atomically
+      const newRegisteredCount = currentRegisteredCount + (registrationStatus === 'registered' ? 1 : 0);
+      const newWaitlistCount = currentWaitlistCount + (registrationStatus === 'waitlisted' ? 1 : 0);
+
+      console.log(`🔢 Updating event counts - Registered: ${newRegisteredCount}, Waitlisted: ${newWaitlistCount}`);
+
+      const eventUpdate = await Event.findByIdAndUpdate(
+        eventId,
+        {
+          registrationCount: newRegisteredCount,
+          waitlistCount: newWaitlistCount
+        },
+        { session: mongoSession, new: true }
+      );
+
+      console.log('📊 Event update result:', eventUpdate ? 'SUCCESS' : 'FAILED');
+
+      const transactionResult = {
+        registrationStatus,
+        registration: registration[0]
+      };
+      
+      console.log('🎉 Transaction completing successfully with result:', JSON.stringify(transactionResult, null, 2));
+      return transactionResult;
     });
+    
+    console.log('✅ Transaction completed successfully');
 
-    await registration.save();
-
-    // 10. Update event registration count
-    await event.updateRegistrationCount();
-
-    // 11. Revalidate the events page
+    // 8. Revalidate the events page
     revalidatePath('/events');
 
     return {
       success: true,
-      message: registrationStatus === 'registered'
+      message: result.registrationStatus === 'registered'
         ? 'Successfully registered for event!'
         : 'Event is full, you have been added to the waitlist',
-      status: registrationStatus
+      status: result.registrationStatus
     };
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error caught:', error);
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error instance:', error instanceof Error);
+    
+    if (error instanceof Error) {
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+    }
+    
+    if (error && typeof error === 'object') {
+      console.error('❌ Error object keys:', Object.keys(error));
+      console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+    }
 
-    // Handle duplicate registration error
+    // Handle specific transaction errors
+    if (error instanceof Error) {
+      // Handle business logic errors thrown from transaction
+      if (error.message.includes('already registered') || error.message.includes('already waitlisted')) {
+        console.log('🔁 Returning already registered error');
+        return { success: false, error: error.message };
+      }
+    }
+
+    // Handle duplicate registration error (MongoDB constraint violation)
     if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
+      console.log('🔁 Returning duplicate key error');
       return { success: false, error: 'You are already registered for this event' };
     }
 
+    console.log('🔁 Returning generic error');
     return { success: false, error: 'Failed to register for event' };
   }
 }
@@ -509,41 +761,75 @@ export async function unregisterFromEventAction(eventId: string) {
       };
     }
 
-    // 6. Find and remove registration
-    const registration = await Registration.findOneAndUpdate(
-      {
+    // 6. Execute unregistration within transaction for atomicity
+    const result = await withTransaction(async (mongoSession) => {
+      // Find and capture original registration status
+      const originalRegistration = await Registration.findOne({
         userId: new Types.ObjectId(session.user.id),
         eventId: new Types.ObjectId(eventId),
         status: { $in: ['registered', 'waitlisted'] }
-      },
-      { status: 'cancelled' },
-      { new: true }
-    );
+      }).session(mongoSession);
 
-    if (!registration) {
-      return { success: false, error: 'You are not registered for this event' };
-    }
+      if (!originalRegistration) {
+        throw new Error('You are not registered for this event');
+      }
 
-    // 7. If someone was registered (not waitlisted), promote someone from waitlist
-    if (registration.status === 'registered') {
-      const waitlistUser = await Registration.findOneAndUpdate(
-        {
-          eventId: new Types.ObjectId(eventId),
-          status: 'waitlisted'
-        },
-        { status: 'registered' },
-        { sort: { registeredAt: 1 }, new: true } // First in, first promoted
+      const wasRegistered = originalRegistration.status === 'registered';
+
+      // Update registration to cancelled
+      await Registration.findByIdAndUpdate(
+        originalRegistration._id,
+        { status: 'cancelled' },
+        { session: mongoSession }
       );
 
-      if (waitlistUser) {
-        console.log(`Promoted user ${waitlistUser.userId} from waitlist to registered`);
+      let promotedUser = null;
+
+      // If user was registered (not waitlisted), promote someone from waitlist
+      if (wasRegistered) {
+        promotedUser = await Registration.findOneAndUpdate(
+          {
+            eventId: new Types.ObjectId(eventId),
+            status: 'waitlisted'
+          },
+          { status: 'registered' },
+          { sort: { registeredAt: 1 }, new: true, session: mongoSession } // First in, first promoted
+        );
       }
+
+      // Get current counts for atomic update
+      const newRegisteredCount = await Registration.countDocuments({
+        eventId: new Types.ObjectId(eventId),
+        status: 'registered'
+      }).session(mongoSession);
+
+      const newWaitlistCount = await Registration.countDocuments({
+        eventId: new Types.ObjectId(eventId),
+        status: 'waitlisted'
+      }).session(mongoSession);
+
+      // Update event counts atomically
+      await Event.findByIdAndUpdate(
+        eventId,
+        {
+          registrationCount: newRegisteredCount,
+          waitlistCount: newWaitlistCount
+        },
+        { session: mongoSession }
+      );
+
+      return {
+        wasRegistered,
+        promotedUser
+      };
+    });
+
+    // Log successful waitlist promotion
+    if (result.promotedUser) {
+      console.log(`Promoted user ${result.promotedUser.userId} from waitlist to registered`);
     }
 
-    // 8. Update event registration count
-    await event.updateRegistrationCount();
-
-    // 9. Revalidate the events page
+    // 7. Revalidate the events page
     revalidatePath('/events');
 
     return {
@@ -553,6 +839,14 @@ export async function unregisterFromEventAction(eventId: string) {
 
   } catch (error) {
     console.error('Unregistration error:', error);
+
+    // Handle specific transaction errors
+    if (error instanceof Error) {
+      if (error.message.includes('not registered')) {
+        return { success: false, error: error.message };
+      }
+    }
+
     return { success: false, error: 'Failed to unregister from event' };
   }
 }

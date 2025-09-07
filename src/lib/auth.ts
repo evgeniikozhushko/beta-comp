@@ -101,6 +101,72 @@ export async function auth(): Promise<Session | null> {
     return null; // Token is invalid or expired
   }
 
+  // Ensure user still exists in database
+  try {
+    await mongoConnect();
+    const userInDb = await User.findById(decoded.id);
+    
+    if (!userInDb) {
+      console.warn("🚨 User in JWT token doesn't exist in database:", {
+        tokenUserId: decoded.id,
+        userEmail: decoded.email,
+        displayName: decoded.displayName
+      });
+      
+      // Try to recreate the user if we have enough information
+      if (decoded.email && decoded.displayName) {
+        console.log("🔧 Attempting to recreate missing user in database...");
+        try {
+          const recreatedUser = await User.create({
+            _id: decoded.id, // Use the same ID from the JWT
+            googleId: decoded.googleId,
+            displayName: decoded.displayName,
+            email: decoded.email,
+            picture: decoded.picture,
+            role: decoded.role,
+          });
+          console.log("✅ Successfully recreated user in database:", recreatedUser.displayName);
+        } catch (recreateError) {
+          console.error("❌ Failed to recreate user in database:", recreateError);
+          // Return null to force re-authentication
+          return null;
+        }
+      } else {
+        console.log("❌ Cannot recreate user - insufficient information in JWT");
+        return null;
+      }
+    } else {
+      // User exists in database, check if their info is up to date
+      let needsUpdate = false;
+      const updates: any = {};
+      
+      if (decoded.displayName && userInDb.displayName !== decoded.displayName) {
+        updates.displayName = decoded.displayName;
+        needsUpdate = true;
+      }
+      if (decoded.email && userInDb.email !== decoded.email) {
+        updates.email = decoded.email;
+        needsUpdate = true;
+      }
+      if (decoded.picture && userInDb.picture !== decoded.picture) {
+        updates.picture = decoded.picture;
+        needsUpdate = true;
+      }
+      if (decoded.role && userInDb.role !== decoded.role) {
+        updates.role = decoded.role;
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        console.log("🔄 Updating user in database with JWT info:", updates);
+        await User.findByIdAndUpdate(decoded.id, updates);
+      }
+    }
+  } catch (dbError) {
+    console.error("❌ Database error during auth check:", dbError);
+    // Continue with session even if database check fails
+  }
+
   // Return session with user information
   const session = {
     user: {
@@ -234,12 +300,34 @@ async function findOrCreateUser(googleUser: {
 }): Promise<User> {
   try {
     await mongoConnect();
+    console.log('🔍 Looking for user with Google ID:', googleUser.googleId, 'and email:', googleUser.email);
     
     // Try to find existing user by Google ID first
     let existingUser = await User.findOne({ googleId: googleUser.googleId });
     
     if (existingUser) {
-      console.log('Found existing user by Google ID:', existingUser.displayName);
+      console.log('✅ Found existing user by Google ID:', existingUser.displayName);
+      
+      // Update user info from Google if needed
+      let needsUpdate = false;
+      if (googleUser.displayName && existingUser.displayName !== googleUser.displayName) {
+        existingUser.displayName = googleUser.displayName;
+        needsUpdate = true;
+      }
+      if (googleUser.email && existingUser.email !== googleUser.email) {
+        existingUser.email = googleUser.email;
+        needsUpdate = true;
+      }
+      if (googleUser.picture && existingUser.picture !== googleUser.picture) {
+        existingUser.picture = googleUser.picture;
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        console.log('🔄 Updating existing user with latest Google info');
+        await existingUser.save();
+      }
+      
       return {
         id: existingUser._id.toString(),
         googleId: existingUser.googleId,
@@ -252,16 +340,18 @@ async function findOrCreateUser(googleUser: {
 
     // If no user found by Google ID, check if user exists by email
     if (googleUser.email) {
+      console.log('🔍 No user found by Google ID, checking by email:', googleUser.email);
       existingUser = await User.findOne({ email: googleUser.email });
       
       if (existingUser) {
-        console.log('Found existing user by email, updating with Google ID:', existingUser.displayName);
+        console.log('✅ Found existing user by email, linking with Google ID:', existingUser.displayName);
+        
         // Update existing user with Google ID and ensure required fields are set
         existingUser.googleId = googleUser.googleId;
-        existingUser.displayName = existingUser.displayName || googleUser.displayName; // Use Google name if current is empty
+        existingUser.displayName = existingUser.displayName || googleUser.displayName;
         existingUser.picture = googleUser.picture || existingUser.picture;
         
-        console.log('Updating user with displayName:', existingUser.displayName);
+        console.log('🔄 Updating user with Google integration:', existingUser.displayName);
         await existingUser.save();
         
         return {
@@ -276,19 +366,24 @@ async function findOrCreateUser(googleUser: {
     }
 
     // Create new user if not found
-    console.log('Creating new user:', googleUser.displayName);
+    console.log('➕ Creating new user:', googleUser.displayName, 'with email:', googleUser.email);
     
     // Check if this is the owner email and assign owner role
     const role: UserRole = googleUser.email === 'evgeniimedium@gmail.com' ? 'owner' : 'athlete';
-    console.log('Assigning role:', role, 'to user:', googleUser.email);
+    console.log('👤 Assigning role:', role, 'to new user:', googleUser.email);
     
-    const newUser = await User.create({
+    const userData = {
       googleId: googleUser.googleId,
       displayName: googleUser.displayName,
       email: googleUser.email,
       picture: googleUser.picture,
       role: role,
-    });
+    };
+    
+    console.log('📝 Creating user with data:', userData);
+    const newUser = await User.create(userData);
+    
+    console.log('✅ Successfully created new user:', newUser._id.toString(), newUser.displayName);
 
     return {
       id: newUser._id.toString(),
@@ -299,8 +394,13 @@ async function findOrCreateUser(googleUser: {
       role: newUser.role,
     };
   } catch (error) {
-    console.error('Error in findOrCreateUser:', error);
-    throw new Error('Database error during user creation/lookup');
+    console.error('❌ Error in findOrCreateUser:', error);
+    console.error('❌ Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      googleUser: googleUser
+    });
+    throw new Error(`Database error during user creation/lookup: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

@@ -54,6 +54,15 @@ function formatDateForInput(dateString?: string): string {
   return date.toISOString().slice(0, 16);
 }
 
+// Helper function to format date for date input (YYYY-MM-DD)
+function formatDateOnlyForInput(dateString?: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  // Format as YYYY-MM-DD for date input
+  return date.toISOString().split('T')[0];
+}
+
 export default function EventForm({
   facilities,
   mode = "create",
@@ -248,7 +257,7 @@ export default function EventForm({
           type="date"
           min={new Date().toISOString().split('T')[0]} // Prevent past dates
           defaultValue={typeof v?.registrationDeadline === 'string' ? v.registrationDeadline :
-            formatDateForInput(initialValues.registrationDeadline)}
+            formatDateOnlyForInput(initialValues.registrationDeadline)}
         />
         {/* Show field error if exists */}
         {formState && 'fieldErrors' in formState && formState.fieldErrors?.registrationDeadline

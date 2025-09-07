@@ -11,7 +11,10 @@
     "seed:facilities": "tsx scripts/seed-facilities.ts",
     "seed:facilities:manual": "tsx scripts/seed-facilities-manual.ts",
     "migrate:roles": "tsx scripts/migrate-user-roles.ts",
-    "assign:role": "tsx scripts/assign-user-role.ts"
+    "assign:role": "tsx scripts/assign-user-role.ts",
+    "reconcile:counts": "tsx scripts/reconcile-registration-counts.ts",
+    "test:db": "tsx scripts/test-database-connection.ts",
+    "test:event-action": "tsx scripts/test-event-creation-action.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",

@@ -119,10 +119,10 @@ EventSchema.methods.getRegistrationStatus = function() {
   return 'open';
 };
 
-// Method to update registration count
-EventSchema.methods.updateRegistrationCount = async function() {
+// Method to get current registration counts (read-only, for verification)
+EventSchema.methods.getCurrentRegistrationCounts = async function() {
   const Registration = models.Registration || mongoose.model('Registration');
-  const count = await Registration.countDocuments({
+  const registrationCount = await Registration.countDocuments({
     eventId: this._id,
     status: 'registered'
   });
@@ -131,11 +131,7 @@ EventSchema.methods.updateRegistrationCount = async function() {
     status: 'waitlisted'
   });
 
-  this.registrationCount = count;
-  this.waitlistCount = waitlistCount;
-  await this.save();
-
-  return { registrationCount: count, waitlistCount };
+  return { registrationCount, waitlistCount };
 };
 
 // Prevent model recompilation in dev

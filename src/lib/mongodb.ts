@@ -35,3 +35,34 @@ export async function mongoConnect() {
   cached.conn = await cached.promise;
   return cached.conn;
 }
+
+/**
+ * Execute a database operation within a MongoDB transaction
+ * Provides atomicity and automatic rollback on errors
+ */
+export async function withTransaction<T>(
+  operation: (session: mongoose.ClientSession) => Promise<T>
+): Promise<T> {
+  console.log('🔧 Starting MongoDB session...');
+  const session = await mongoose.startSession();
+  console.log('✅ MongoDB session created');
+  
+  try {
+    console.log('🔄 Starting transaction...');
+    const result = await session.withTransaction(async () => {
+      console.log('⚡ Inside transaction, executing operation...');
+      const operationResult = await operation(session);
+      console.log('✅ Operation completed successfully');
+      return operationResult;
+    });
+    console.log('✅ Transaction committed successfully');
+    return result;
+  } catch (error) {
+    console.error('❌ Transaction failed:', error);
+    throw error;
+  } finally {
+    console.log('🔧 Ending MongoDB session...');
+    await session.endSession();
+    console.log('✅ MongoDB session ended');
+  }
+}

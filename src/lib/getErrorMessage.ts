@@ -26,8 +26,26 @@ export function getErrorMessage(error: string | Error): string {
       // Event creation specific
       case "UNAUTHORIZED":
         return "You must be signed in to create events.";
+      case "PERMISSION_DENIED":
+        return "You don't have permission to create events.";
       case "INVALID_FACILITY":
         return "Please select a valid facility.";
+      case "USER_NOT_FOUND":
+        return "Your user account could not be found. Please try signing out and back in.";
+      case "USER_CREATION_FAILED":
+        return "Failed to set up your user account. Please try signing out and back in.";
+      case "USER_SESSION_INCOMPLETE":
+        return "Your session is incomplete. Please sign out and back in.";
+      case "DUPLICATE_EVENT":
+        return "An event with this information already exists.";
+  
+      // Event registration specific
+      case "INVALID_EVENT_ID":
+        return "Invalid event ID provided.";
+      case "EVENT_NOT_FOUND":
+        return "Event not found.";
+      case "REGISTRATION_CLOSED":
+        return "Registration is closed for this event.";
   
       // System / server
       case "DB_ERROR":
