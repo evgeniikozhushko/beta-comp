@@ -83,7 +83,7 @@ export async function reconcileRegistrationCounts(
           // Auto-fix if enabled and not dry run
           if (autoFix && !dryRun) {
             try {
-              await fixEventCounts(event._id.toString(), discrepancy.actualRegistered, discrepancy.actualWaitlisted);
+              await fixEventCounts(String(event._id), discrepancy.actualRegistered, discrepancy.actualWaitlisted);
               report.fixesApplied++;
               console.log(`✅ Fixed counts for event "${discrepancy.eventName}"`);
             } catch (error) {
