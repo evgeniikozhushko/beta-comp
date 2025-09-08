@@ -1,6 +1,7 @@
 "use client"
 
 import { type LucideIcon } from "lucide-react"
+import { useMemo } from "react"
 
 import {
   SidebarGroup,
@@ -27,14 +28,22 @@ interface NavMainProps {
 
 // Safe component for admin items with error boundary
 function AdminNavItems({ user }: { user: User }) {
+  const adminItems = useMemo(() => {
+    try {
+      return hasPermission(user.role, 'canManageUsers') ? [
+        {
+          title: "User Management",
+          url: "/dashboard/athletes/manage",
+          icon: Settings,
+        },
+      ] : []
+    } catch (error) {
+      console.error('Error calculating admin permissions:', error)
+      return []
+    }
+  }, [user.role])
+  
   try {
-    const adminItems: NavItem[] = hasPermission(user.role, 'canManageUsers') ? [
-      {
-        title: "User Management",
-        url: "/dashboard/athletes/manage",
-        icon: Settings,
-      },
-    ] : []
 
     if (adminItems.length === 0) return null
 

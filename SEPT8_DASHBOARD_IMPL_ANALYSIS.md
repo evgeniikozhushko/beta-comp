@@ -32,7 +32,7 @@
 │ │                                                                                       │ │
 │ │ ⚡ Performance Issues                                                                  │ │
 │ │                                                                                       │ │
-│ │ Runtime Performance                                                                   │ │
+│ │ Runtime Performance  [Sept 9th]                                                                 │ │
 │ │                                                                                       │ │
 │ │ 1. Permission Calculation (nav-main.tsx:53)                                           │ │
 │ │   - hasPermission() called on every render                                            │ │
