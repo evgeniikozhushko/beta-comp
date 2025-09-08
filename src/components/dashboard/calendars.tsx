@@ -1,14 +1,17 @@
 "use client"
 
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar as CalendarUI } from "@/components/ui/calendar"
+import { Calendar } from "lucide-react"
 import {
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 
 export function Calendars() {
+  const { state } = useSidebar()
   const [date, setDate] = useState<Date | undefined>(undefined)
   
   useEffect(() => {
@@ -17,14 +20,25 @@ export function Calendars() {
 
   return (
     <SidebarGroup className="px-0">
-      {/* <SidebarGroupLabel className="px-2">Calendar</SidebarGroupLabel> */}
       <SidebarGroupContent className="px-2">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={setDate}
-          className="p-0 [&_[role=gridcell].bg-accent]:bg-sidebar-primary [&_[role=gridcell].bg-accent]:text-sidebar-primary-foreground [&_[role=gridcell]]:w-[33px]"
-        />
+        {state === "expanded" ? (
+          <CalendarUI
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="p-0 [&_[role=gridcell].bg-accent]:bg-sidebar-primary [&_[role=gridcell].bg-accent]:text-sidebar-primary-foreground [&_[role=gridcell]]:w-[33px]"
+          />
+        ) : (
+          <div className="flex items-center justify-center py-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+            >
+              <Calendar className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </SidebarGroupContent>
     </SidebarGroup>
   )

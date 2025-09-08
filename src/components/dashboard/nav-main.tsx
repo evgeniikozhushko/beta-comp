@@ -13,6 +13,7 @@ import { Calendar, Users, BarChart3, Home, Settings } from "lucide-react"
 import { hasPermission } from "@/lib/types/permissions"
 import { User } from "@/lib/auth"
 import Link from "next/link"
+import { ErrorBoundary } from "@/components/ui/error-boundary"
 
 interface NavItem {
   title: string
@@ -22,6 +23,42 @@ interface NavItem {
 
 interface NavMainProps {
   user: User
+}
+
+// Safe component for admin items with error boundary
+function AdminNavItems({ user }: { user: User }) {
+  try {
+    const adminItems: NavItem[] = hasPermission(user.role, 'canManageUsers') ? [
+      {
+        title: "User Management",
+        url: "/dashboard/athletes/manage",
+        icon: Settings,
+      },
+    ] : []
+
+    if (adminItems.length === 0) return null
+
+    return (
+      <SidebarGroup>
+        <SidebarGroupLabel>Administration</SidebarGroupLabel>
+        <SidebarMenu>
+          {adminItems.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <Link href={item.url}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+    )
+  } catch (error) {
+    console.error('Error rendering admin navigation:', error)
+    return null
+  }
 }
 
 export function NavMain({ user }: NavMainProps) {
@@ -49,15 +86,6 @@ export function NavMain({ user }: NavMainProps) {
     },
   ]
 
-  // Admin-only navigation items
-  const adminItems: NavItem[] = hasPermission(user.role, 'canManageUsers') ? [
-    {
-      title: "User Management",
-      url: "/dashboard/athletes/manage",
-      icon: Settings,
-    },
-  ] : []
-
   return (
     <>
       {/* Main Navigation */}
@@ -77,24 +105,10 @@ export function NavMain({ user }: NavMainProps) {
         </SidebarMenu>
       </SidebarGroup>
 
-      {/* Admin Navigation */}
-      {adminItems.length > 0 && (
-        <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
-          <SidebarMenu>
-            {adminItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title}>
-                  <Link href={item.url}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-      )}
+      {/* Admin Navigation - Wrapped in ErrorBoundary */}
+      <ErrorBoundary fallback={null}>
+        <AdminNavItems user={user} />
+      </ErrorBoundary>
     </>
   )
 }

@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/types/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from"@/components/ui/breadcrumb";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 
@@ -34,9 +34,9 @@ export default async function DashboardPage() {
         {/* Welcome Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Welcome back, {session.user.displayName}</h1>
+            <h1 className="text-2xl font-bold">Welcome back, {session.user.displayName}</h1>
             <p className="text-muted-foreground">
-              Your central hub for managing your competitions
+              Your central hub for managing competitions
             </p>
           </div>
           {/* <Badge variant={isAdmin ? "default" : "secondary"} className="capitalize">

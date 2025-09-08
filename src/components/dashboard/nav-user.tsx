@@ -1,6 +1,7 @@
 "use client"
 
 import { LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,6 +18,7 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { state } = useSidebar()
+  const router = useRouter()
 
   // Get role badge variant
   const getRoleBadgeVariant = (role: string) => {
@@ -36,7 +38,7 @@ export function NavUser({ user }: NavUserProps) {
 
   const handleSignOut = async () => {
     // Client-side sign out - redirect to sign-out endpoint
-    window.location.href = '/api/auth/signout'
+    router.push('/api/auth/signout')
   }
 
   return (
