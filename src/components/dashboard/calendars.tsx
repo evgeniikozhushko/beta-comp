@@ -6,15 +6,19 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/components/ui/sidebar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export function Calendars() {
-  const [date, setDate] = useState<Date | undefined>(new Date())
+  const [date, setDate] = useState<Date | undefined>(undefined)
+  
+  useEffect(() => {
+    setDate(new Date())
+  }, [])
 
   return (
     <SidebarGroup className="px-0">
-      <SidebarGroupLabel className="px-2">Calendar</SidebarGroupLabel>
-      <SidebarGroupContent>
+      {/* <SidebarGroupLabel className="px-2">Calendar</SidebarGroupLabel> */}
+      <SidebarGroupContent className="px-2">
         <Calendar
           mode="single"
           selected={date}

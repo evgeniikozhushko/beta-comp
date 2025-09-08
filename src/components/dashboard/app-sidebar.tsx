@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar"
 import { NavMain } from "@/components/dashboard/nav-main"
 import { NavUser } from "@/components/dashboard/nav-user"
+import { Calendars } from "@/components/dashboard/calendars"
 import { User } from "@/lib/auth"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -43,6 +44,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       {/* Main Content */}
       <SidebarContent>
         <NavMain user={user} />
+        <Calendars />
       </SidebarContent>
 
       {/* Footer */}

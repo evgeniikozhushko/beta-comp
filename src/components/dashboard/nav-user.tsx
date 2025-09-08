@@ -2,11 +2,6 @@
 
 import { LogOut } from "lucide-react"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   SidebarMenu,
@@ -22,16 +17,6 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { state } = useSidebar()
-
-  // Create user initials for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   // Get role badge variant
   const getRoleBadgeVariant = (role: string) => {

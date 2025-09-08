@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/types/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from"@/components/ui/breadcrumb";
 import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react";
@@ -15,7 +14,6 @@ export default async function DashboardPage() {
 
   const canCreateEvents = hasPermission(session.user.role, 'canCreateEvents');
   const canManageUsers = hasPermission(session.user.role, 'canManageUsers');
-  const isAdmin = session.user.role === 'owner' || session.user.role === 'admin';
 
   return (
     <SidebarInset>
