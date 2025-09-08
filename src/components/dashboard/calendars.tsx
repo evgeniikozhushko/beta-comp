@@ -8,15 +8,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 export function Calendars() {
   const { state } = useSidebar()
-  const [date, setDate] = useState<Date | undefined>(undefined)
-  
-  useEffect(() => {
-    setDate(new Date())
-  }, [])
+  const [date, setDate] = useState<Date | undefined>(new Date())
 
   return (
     <SidebarGroup className="px-0">
