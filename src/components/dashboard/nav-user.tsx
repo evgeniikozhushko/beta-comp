@@ -22,7 +22,7 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { state } = useSidebar()
-  
+
   // Create user initials for avatar fallback
   const getInitials = (name: string) => {
     return name
@@ -59,8 +59,8 @@ export function NavUser({ user }: NavUserProps) {
       <SidebarMenuItem>
         {state === "expanded" ? (
           <>
-            <div className="flex items-center gap-2 px-1 py-1.5">
-              <Avatar className="h-8 w-8 rounded-lg">
+            <div className="flex items-center gap-2 pl-2">
+              {/* <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
                   src={user.picture || ""}
                   alt={user.displayName}
@@ -68,18 +68,18 @@ export function NavUser({ user }: NavUserProps) {
                 <AvatarFallback className="rounded-lg">
                   {getInitials(user.displayName)}
                 </AvatarFallback>
-              </Avatar>
+              </Avatar> */}
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.displayName}</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pb-2">
                   <span className="truncate text-xs">{user.email}</span>
-                  <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
-                    {user.role}
-                  </Badge>
                 </div>
+                <Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">
+                  {user.role}
+                </Badge>
               </div>
             </div>
-            <div className="px-1 py-1">
+            <div className="px-0 py-4">
               <Button
                 variant="ghost"
                 size="sm"

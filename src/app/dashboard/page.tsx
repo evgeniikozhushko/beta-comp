@@ -41,9 +41,9 @@ export default async function DashboardPage() {
               Your central hub for managing your competitions
             </p>
           </div>
-          <Badge variant={isAdmin ? "default" : "secondary"} className="capitalize">
+          {/* <Badge variant={isAdmin ? "default" : "secondary"} className="capitalize">
             {session.user.role}
-          </Badge>
+          </Badge> */}
         </div>
 
         {/* Quick Actions */}

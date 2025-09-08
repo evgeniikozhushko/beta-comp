@@ -28,10 +28,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             <SidebarMenuButton size="lg" asChild>
               <a href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <span className="text-xl font-bold">BC</span>
+                  <span className="text-md font-bold">BC</span>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Beta Comp</span>
+                  <span className="truncate font-semibold">beta comp</span>
                   <span className="truncate text-xs">Competition Platform</span>
                 </div>
               </a>
