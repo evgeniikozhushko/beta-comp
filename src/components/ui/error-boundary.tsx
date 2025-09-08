@@ -34,7 +34,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleReload = () => {
-    window.location.reload()
+    if (typeof window !== 'undefined') {
+      window.location.reload()
+    }
   }
 
   public render() {
@@ -91,7 +93,9 @@ interface AuthErrorFallbackProps {
 
 export function AuthErrorFallback({ error, reset }: AuthErrorFallbackProps) {
   const handleSignOut = () => {
-    window.location.href = '/api/auth/signout'
+    if (typeof window !== 'undefined') {
+      window.location.href = '/api/auth/signout'
+    }
   }
 
   return (
