@@ -176,7 +176,7 @@ export default async function DashboardPage() {
           )}
 
           {/* View Events Card */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          {/* <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <Link href="/dashboard/events">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">View Events</CardTitle>
@@ -188,7 +188,7 @@ export default async function DashboardPage() {
                 </p>
               </CardContent>
             </Link>
-          </Card>
+          </Card> */}
 
           {/* Prev Quick Actions */}
           {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

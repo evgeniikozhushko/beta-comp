@@ -11,6 +11,7 @@ import UpdateEventSheet from "@/components/UpdateEventSheet"
 import DeleteEventButton from "@/components/DeleteEventButton"
 import { canManageEvent } from "@/lib/types/permissions"
 import { Badge } from "@/components/ui/badge"
+import { Calendar, Mountain, Users } from "lucide-react"
 
 type FacilityOption = { id: string; name: string }
 
@@ -86,21 +87,21 @@ export default function EventAccordionItem({
     <AccordionItem value={eventId}>
       <AccordionTrigger className="text-left hover:no-underline">
         <div className="flex flex-col items-start gap-2 w-full">
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-start w-full">
             <span className="font-semibold text-base">{event.name}</span>
-            <Badge variant={getStatusBadgeVariant(eventStatus)} className="ml-2">
-              {eventStatus === 'open' ? 'Open' : eventStatus === 'full' ? 'Full' : 'Closed'}
+            <Badge variant={getStatusBadgeVariant(eventStatus)} className="ml-4">
+              {eventStatus === 'open' ? 'Active' : eventStatus === 'full' ? 'Full' : 'Closed'}
             </Badge>
           </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              📅 {formattedDate}
+              {formattedDate}
             </span>
             <span className="flex items-center gap-1">
-              🏔️ {event.discipline}
+              {event.discipline}
             </span>
             <span className="flex items-center gap-1">
-              👥 {event.division}
+              {event.facility.name}
             </span>
           </div>
         </div>
