@@ -6,8 +6,13 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/co
 import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import CreateEventCard from "@/app/dashboard/CreateEventCard";
+import EventAccordion from "@/components/EventAccordion";
 import { mongoConnect } from "@/lib/mongodb";
 import Facility from "@/lib/models/Facility";
+import Event from "@/lib/models/Event";
+import Registration from "@/lib/models/Registration";
+import { Types } from "mongoose";
+import { serializeMongooseArray, SerializedEvent } from "@/lib/utils/serialize";
 
 /**
  * DashboardPage Component
@@ -23,21 +28,56 @@ export default async function DashboardPage() {
 
   const canCreateEvents = hasPermission(session.user.role, 'canCreateEvents');
   const canManageUsers = hasPermission(session.user.role, 'canManageUsers');
+  const userCanRegister = hasPermission(session.user.role, 'canRegisterForEvents');
 
-  // Fetch facilities for CreateEventSheet
+  // Fetch facilities, events, and user registrations
   let facilities: { id: string; name: string }[] = [];
+  let events: SerializedEvent[] = [];
+  let userRegistrations: Record<string, string> = {};
+  let isLoading = false;
+  let error: string | null = null;
+
   try {
     await mongoConnect();
-    const rawFacilities = await Facility.find().lean();
-    facilities = rawFacilities.map((f: any) => ({
-      id: f._id.toString(), // Convert ObjectId to string
+    
+    // Fetch facilities and events in parallel
+    const [rawFacilities, rawEvents] = await Promise.all([
+      Facility.find().lean(),
+      Event.find()
+        .populate("facility")
+        .sort({ date: 1 })
+        .lean()
+    ]);
+
+    // Serialize and format facilities
+    const serializedFacilities = serializeMongooseArray(rawFacilities);
+    facilities = serializedFacilities.map((f: any) => ({
+      id: f._id,
       name: f.city
         ? `${f.name} — ${f.city}, ${f.province}`
-        : `${f.name} — ${f.province}`, // Include location
+        : `${f.name} — ${f.province}`,
     }));
-  } catch (error) {
-    console.error("Error fetching facilities for dashboard:", error);
-    // Continue with empty facilities array - CreateEventSheet will handle this gracefully
+
+    // Serialize events
+    events = serializeMongooseArray<SerializedEvent>(rawEvents);
+
+    // Fetch user registrations
+    const userRegs = await Registration.find({
+      userId: new Types.ObjectId(session.user.id),
+      status: { $in: ['registered', 'waitlisted'] }
+    }).lean();
+
+    // Serialize and create registration lookup
+    const serializedUserRegs = serializeMongooseArray(userRegs);
+    userRegistrations = serializedUserRegs.reduce((acc, reg: any) => {
+      acc[reg.eventId] = reg.status;
+      return acc;
+    }, {} as Record<string, string>);
+
+  } catch (fetchError) {
+    console.error("Error fetching dashboard data:", fetchError);
+    error = "Failed to load dashboard data. Please try refreshing the page.";
+    // Continue with empty data - components will handle gracefully
   }
 
   return (
@@ -70,28 +110,47 @@ export default async function DashboardPage() {
         </div>
 
 
-        {/* Overview Stats - Placeholder for Phase 2 */}
+        {/* Overview Stats */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Events</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-2xl font-bold">{events.length}</div>
               <p className="text-xs text-muted-foreground">
-                Coming in Phase 2
+                Active competitions
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Registrations</CardTitle>
+              <CardTitle className="text-sm font-medium">My Registrations</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-2xl font-bold">{Object.keys(userRegistrations).length}</div>
               <p className="text-xs text-muted-foreground">
-                Coming in Phase 2
+                Registered events
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {events.filter(e => {
+                  const eventDate = new Date(e.date);
+                  const now = new Date();
+                  return eventDate.getMonth() === now.getMonth() && 
+                         eventDate.getFullYear() === now.getFullYear();
+                }).length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Upcoming events
               </p>
             </CardContent>
           </Card>
@@ -103,19 +162,7 @@ export default async function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">-</div>
               <p className="text-xs text-muted-foreground">
-                Coming in Phase 2
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">-</div>
-              <p className="text-xs text-muted-foreground">
-                Coming in Phase 2
+                Coming soon
               </p>
             </CardContent>
           </Card>
@@ -319,6 +366,18 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </div> */}
+
+        {/* Events Accordion */}
+        <EventAccordion
+          events={events}
+          facilities={facilities}
+          userRegistrations={userRegistrations}
+          userCanRegister={userCanRegister}
+          userRole={session.user.role}
+          userId={session.user.id}
+          isLoading={isLoading}
+          error={error}
+        />
       </div>
     </SidebarInset>
   );

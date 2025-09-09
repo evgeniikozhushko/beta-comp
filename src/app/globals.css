@@ -185,3 +185,41 @@
   height: 100vh;
   display: flex;
 }
+
+/* Accordion animations for shadcn/ui */
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@layer components {
+  .animate-accordion-down {
+    animation: accordion-down 0.2s ease-out;
+  }
+  
+  .animate-accordion-up {
+    animation: accordion-up 0.2s ease-out;
+  }
+
+  /* Custom scrollbar styles for event accordion */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thumb-gray-300 {
+    scrollbar-color: rgb(209 213 219) transparent;
+  }
+  
+  .dark .scrollbar-thumb-gray-600 {
+    scrollbar-color: rgb(75 85 99) transparent;
+  }
+  
+  .scrollbar-track-transparent {
+    scrollbar-color: transparent transparent;
+  }
+}
