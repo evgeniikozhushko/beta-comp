@@ -1,7 +1,7 @@
 // src/components/CreateEventSheet.tsx
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Sheet,
@@ -16,21 +16,49 @@ import { toast } from "sonner";
 import EventForm from "@/components/EventForm";
 
 type FacilityOption = { id: string; name: string };
-type Props = { facilities: FacilityOption[] };
 
-export default function CreateEventSheet({ facilities }: Props) {
-  const [open, setOpen] = useState(false);
+interface Props {
+  facilities: FacilityOption[];
+  // New props for external control
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  // Optional: hide the trigger button when controlled externally
+  hideTrigger?: boolean;
+}
+
+/**
+ * CreateEventSheet Component
+ * 
+ * Enhanced to support both internal and external state management.
+ * When open/onOpenChange props are provided, the sheet is controlled externally.
+ * When not provided, it maintains its original internal state behavior.
+ */
+export default function CreateEventSheet({ 
+  facilities, 
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+  hideTrigger = false 
+}: Props) {
+  // Internal state (used when not controlled externally)
+  const [internalOpen, setInternalOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [createdCount, setCreatedCount] = useState(0);
   const router = useRouter();
 
+  // Determine if this is externally controlled
+  const isExternallyControlled = externalOpen !== undefined && externalOnOpenChange !== undefined;
+  
+  // Use external or internal state
+  const open = isExternallyControlled ? externalOpen : internalOpen;
+  const setOpen = isExternallyControlled ? externalOnOpenChange! : setInternalOpen;
+
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
-      // block closing while submitting
+      // Block closing while submitting
       if (pending && nextOpen === false) return;
       setOpen(nextOpen);
     },
-    [pending]
+    [pending, setOpen]
   );
 
   const handleSuccess = useCallback(
@@ -38,16 +66,26 @@ export default function CreateEventSheet({ facilities }: Props) {
       setCreatedCount((c) => c + 1);
       router.refresh(); // refresh grid behind the sheet
       toast.success(`Event "${name}" created successfully!`);
-      // keep the sheet open for rapid entry
+      // Keep the sheet open for rapid entry (original behavior)
     },
     [router]
   );
 
+  // Reset pending state when sheet closes
+  useEffect(() => {
+    if (!open) {
+      setPending(false);
+    }
+  }, [open]);
+
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
-        <Button>+ Create Event</Button>
-      </SheetTrigger>
+      {/* Conditional trigger - only show if not hidden and not externally controlled */}
+      {!hideTrigger && !isExternallyControlled && (
+        <SheetTrigger asChild>
+          <Button>+ Create Event</Button>
+        </SheetTrigger>
+      )}
 
       <SheetContent
         side="left"
