@@ -6,15 +6,23 @@ import EventAccordionItem from "@/components/EventAccordionItem"
 import YearFilter from "@/components/YearFilter"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AlertCircle } from "lucide-react"
+import { UserRole } from "@/lib/types/permissions"
 
 type FacilityOption = { id: string; name: string }
+
+interface FacilityData {
+  _id: string;
+  name: string;
+  city?: string;
+  province: string;
+}
 
 interface EventData {
   _id: string
   name: string
   date: string
   durationDays: number
-  facility: any
+  facility: FacilityData
   discipline: string
   ageCategories: string[]
   division: string
@@ -31,7 +39,7 @@ interface EventAccordionProps {
   facilities: FacilityOption[]
   userRegistrations: Record<string, string>
   userCanRegister: boolean
-  userRole?: string
+  userRole?: UserRole
   userId?: string
   isLoading?: boolean
   error?: string | null
@@ -146,7 +154,7 @@ export default function EventAccordion({
           >
             {filteredEvents.map((event) => {
               const eventId = event._id.toString()
-              const userRegistrationStatus = userRegistrations[eventId] || null
+              const userRegistrationStatus = (userRegistrations[eventId] as "registered" | "waitlisted") || null
 
               return (
                 <EventAccordionItem

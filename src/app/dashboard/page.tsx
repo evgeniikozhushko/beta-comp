@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/types/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react";
+import { Users, BarChart3, Settings } from "lucide-react";
 import Link from "next/link";
 import CreateEventCard from "@/app/dashboard/CreateEventCard";
 import EventAccordion from "@/components/EventAccordion";
@@ -10,7 +10,12 @@ import Facility from "@/lib/models/Facility";
 import Event from "@/lib/models/Event";
 import Registration from "@/lib/models/Registration";
 import { Types } from "mongoose";
-import { serializeMongooseArray, SerializedEvent } from "@/lib/utils/serialize";
+import { serializeMongooseArray, SerializedEvent, SerializedFacility } from "@/lib/utils/serialize";
+
+interface RegistrationData {
+  eventId: string;
+  status: string;
+}
 
 /**
  * DashboardPage Component
@@ -48,8 +53,8 @@ export default async function DashboardPage() {
     ]);
 
     // Serialize and format facilities
-    const serializedFacilities = serializeMongooseArray(rawFacilities);
-    facilities = serializedFacilities.map((f: any) => ({
+    const serializedFacilities = serializeMongooseArray<SerializedFacility>(rawFacilities);
+    facilities = serializedFacilities.map((f) => ({
       id: f._id,
       name: f.city
         ? `${f.name} — ${f.city}, ${f.province}`
@@ -66,8 +71,8 @@ export default async function DashboardPage() {
     }).lean();
 
     // Serialize and create registration lookup
-    const serializedUserRegs = serializeMongooseArray(userRegs);
-    userRegistrations = serializedUserRegs.reduce((acc, reg: any) => {
+    const serializedUserRegs = serializeMongooseArray<RegistrationData>(userRegs);
+    userRegistrations = serializedUserRegs.reduce((acc, reg) => {
       acc[reg.eventId] = reg.status;
       return acc;
     }, {} as Record<string, string>);

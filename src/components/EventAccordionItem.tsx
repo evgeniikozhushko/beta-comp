@@ -9,18 +9,24 @@ import {
 import EventRegistrationButton from "@/components/EventRegistrationButton"
 import UpdateEventSheet from "@/components/UpdateEventSheet"
 import DeleteEventButton from "@/components/DeleteEventButton"
-import { canManageEvent } from "@/lib/types/permissions"
+import { canManageEvent, UserRole } from "@/lib/types/permissions"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Mountain, Users } from "lucide-react"
 
 type FacilityOption = { id: string; name: string }
+
+interface FacilityData {
+  _id: string;
+  name: string;
+  city?: string;
+  province: string;
+}
 
 interface EventData {
   _id: string
   name: string
   date: string
   durationDays: number
-  facility: any
+  facility: FacilityData
   discipline: string
   ageCategories: string[]
   division: string
@@ -35,9 +41,9 @@ interface EventData {
 interface EventAccordionItemProps {
   event: EventData
   facilities: FacilityOption[]
-  userRegistrationStatus: string | null
+  userRegistrationStatus: "registered" | "waitlisted" | null
   userCanRegister: boolean
-  userRole?: string
+  userRole?: UserRole
   userId?: string
 }
 
