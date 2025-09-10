@@ -19,7 +19,7 @@ import { getErrorMessage } from "@/lib/getErrorMessage";
  * - Link to sign-up page
  */
 
-const Page = async () => {
+export default async function Page() {
   // Check if user is already authenticated
   const session = await auth();
   
@@ -121,6 +121,4 @@ const Page = async () => {
       </div>
     </div>
   );
-};
-
-export default Page; 
+} 

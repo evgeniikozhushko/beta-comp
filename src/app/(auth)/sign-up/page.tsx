@@ -5,7 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 
-const Page = async () => {
+export default async function Page() {
   // If already signed in, send them home
   const session = await auth();
   if (session) redirect("/");
@@ -97,6 +97,4 @@ const Page = async () => {
       </div>
     </div>
   );
-};
-
-export default Page;
+}
