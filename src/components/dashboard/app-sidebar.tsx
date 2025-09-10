@@ -21,8 +21,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   return (
-    <Sidebar collapsible="icon" {...props}>
-      {/* Header */}
+    <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -40,14 +39,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-
-      {/* Main Content */}
       <SidebarContent>
         <NavMain user={user} />
         <Calendars />
       </SidebarContent>
-
-      {/* Footer */}
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>

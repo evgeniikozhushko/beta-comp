@@ -101,69 +101,38 @@ export async function auth(): Promise<Session | null> {
     return null; // Token is invalid or expired
   }
 
-  // Ensure user still exists in database
+  // Simplified database check with timeout
   try {
-    await mongoConnect();
-    const userInDb = await User.findById(decoded.id);
+    console.log('⏱️  Starting database check...');
+    const dbCheckId = `DB_CHECK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.time(dbCheckId);
     
-    if (!userInDb) {
-      console.warn("🚨 User in JWT token doesn't exist in database:", {
-        tokenUserId: decoded.id,
-        userEmail: decoded.email,
-        displayName: decoded.displayName
-      });
-      
-      // Try to recreate the user if we have enough information
-      if (decoded.email && decoded.displayName) {
-        console.log("🔧 Attempting to recreate missing user in database...");
-        try {
-          const recreatedUser = await User.create({
-            _id: decoded.id, // Use the same ID from the JWT
-            googleId: decoded.googleId,
-            displayName: decoded.displayName,
-            email: decoded.email,
-            picture: decoded.picture,
-            role: decoded.role,
-          });
-          console.log("✅ Successfully recreated user in database:", recreatedUser.displayName);
-        } catch (recreateError) {
-          console.error("❌ Failed to recreate user in database:", recreateError);
-          // Return null to force re-authentication
-          return null;
-        }
-      } else {
-        console.log("❌ Cannot recreate user - insufficient information in JWT");
-        return null;
-      }
-    } else {
-      // User exists in database, check if their info is up to date
-      let needsUpdate = false;
-      const updates: Partial<Pick<User, 'displayName' | 'email' | 'picture' | 'role'>> = {};
-      
-      if (decoded.displayName && userInDb.displayName !== decoded.displayName) {
-        updates.displayName = decoded.displayName;
-        needsUpdate = true;
-      }
-      if (decoded.email && userInDb.email !== decoded.email) {
-        updates.email = decoded.email;
-        needsUpdate = true;
-      }
-      if (decoded.picture && userInDb.picture !== decoded.picture) {
-        updates.picture = decoded.picture;
-        needsUpdate = true;
-      }
-      if (decoded.role && userInDb.role !== decoded.role) {
-        updates.role = decoded.role;
-        needsUpdate = true;
-      }
-      
-      if (needsUpdate) {
-        console.log("🔄 Updating user in database with JWT info:", updates);
-        await User.findByIdAndUpdate(decoded.id, updates);
-      }
+    await Promise.race([
+      mongoConnect(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database connection timeout')), 3000)
+      )
+    ]);
+    
+    // Quick check if user exists - don't do complex operations
+    const userExists = await Promise.race([
+      User.exists({ _id: decoded.id }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('User check timeout')), 2000)
+      )
+    ]);
+    
+    if (!userExists) {
+      console.warn("🚨 User in JWT doesn't exist in database, forcing re-auth");
+      console.timeEnd(dbCheckId);
+      return null;
     }
+    
+    console.log('✅ User exists in database');
+    console.timeEnd(dbCheckId);
   } catch (dbError) {
     console.error("❌ Database error during auth check:", dbError);
+    // Note: dbCheckId is not available here, so we skip timeEnd to avoid errors
     // Continue with session even if database check fails
   }
 
@@ -555,26 +524,20 @@ async function getUserByEmail(email: string): Promise<DatabaseUser | null> {
   
   try {
     console.log('Connecting to MongoDB...');
-    await mongoConnect();
+    await Promise.race([
+      mongoConnect(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('MongoDB connection timeout')), 3000)
+      )
+    ]);
     console.log('MongoDB connected, searching for user...');
     
-    // TEMPORARY: Check all users in database
-    const allUsers = await User.find({});
-    console.log('=== ALL USERS IN DATABASE ===');
-    console.log('Total users found:', allUsers.length);
-    allUsers.forEach((user, index) => {
-      console.log(`User ${index + 1}:`, {
-        id: user._id,
-        email: user.email,
-        displayName: user.displayName,
-        hasPassword: !!user.password,
-        passwordLength: user.password ? user.password.length : 0,
-        passwordStart: user.password ? user.password.substring(0, 10) + '...' : 'null'
-      });
-    });
-    console.log('=== END ALL USERS ===');
-    
-    const user = await User.findOne({ email });
+    const user = await Promise.race([
+      User.findOne({ email }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('User query timeout')), 2000)
+      )
+    ]);
     console.log('Database query result:', user ? `Found user: ${user.email}` : 'No user found');
     
     if (user) {

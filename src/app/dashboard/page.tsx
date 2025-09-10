@@ -1,8 +1,6 @@
 import { auth } from "@/lib/auth";
 import { hasPermission } from "@/lib/types/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
 import { Calendar, Users, BarChart3, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import CreateEventCard from "@/app/dashboard/CreateEventCard";
@@ -34,7 +32,7 @@ export default async function DashboardPage() {
   let facilities: { id: string; name: string }[] = [];
   let events: SerializedEvent[] = [];
   let userRegistrations: Record<string, string> = {};
-  let isLoading = false;
+  const isLoading = false;
   let error: string | null = null;
 
   try {
@@ -81,21 +79,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <SidebarInset>
-      {/* Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Dashboard</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex flex-1 flex-col gap-6 p-6">
         {/* Welcome Section */}
         <div className="flex items-center justify-between">
           <div>
@@ -378,7 +362,6 @@ export default async function DashboardPage() {
           isLoading={isLoading}
           error={error}
         />
-      </div>
-    </SidebarInset>
+    </div>
   );
 }

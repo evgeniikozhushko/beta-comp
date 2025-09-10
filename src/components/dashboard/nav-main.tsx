@@ -26,7 +26,6 @@ interface NavMainProps {
   user: User
 }
 
-// Safe component for admin items with error boundary
 function AdminNavItems({ user }: { user: User }) {
   const adminItems = useMemo(() => {
     try {
@@ -44,7 +43,6 @@ function AdminNavItems({ user }: { user: User }) {
   }, [user.role])
   
   try {
-
     if (adminItems.length === 0) return null
 
     return (
@@ -71,7 +69,6 @@ function AdminNavItems({ user }: { user: User }) {
 }
 
 export function NavMain({ user }: NavMainProps) {
-  // Simple navigation items without dropdown complexity
   const mainItems: NavItem[] = [
     {
       title: "Dashboard",
@@ -97,7 +94,6 @@ export function NavMain({ user }: NavMainProps) {
 
   return (
     <>
-      {/* Main Navigation */}
       <SidebarGroup>
         <SidebarGroupLabel>Platform</SidebarGroupLabel>
         <SidebarMenu>
@@ -114,7 +110,6 @@ export function NavMain({ user }: NavMainProps) {
         </SidebarMenu>
       </SidebarGroup>
 
-      {/* Admin Navigation - Wrapped in ErrorBoundary */}
       <ErrorBoundary fallback={null}>
         <AdminNavItems user={user} />
       </ErrorBoundary>

@@ -20,7 +20,6 @@ export function NavUser({ user }: NavUserProps) {
   const { state } = useSidebar()
   const router = useRouter()
 
-  // Get role badge variant
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'owner':
@@ -37,7 +36,6 @@ export function NavUser({ user }: NavUserProps) {
   }
 
   const handleSignOut = async () => {
-    // Client-side sign out - redirect to sign-out endpoint
     router.push('/api/auth/signout')
   }
 
@@ -47,15 +45,6 @@ export function NavUser({ user }: NavUserProps) {
         {state === "expanded" ? (
           <>
             <div className="flex items-center gap-2 pl-2">
-              {/* <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage
-                  src={user.picture || ""}
-                  alt={user.displayName}
-                />
-                <AvatarFallback className="rounded-lg">
-                  {getInitials(user.displayName)}
-                </AvatarFallback>
-              </Avatar> */}
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.displayName}</span>
                 <div className="flex items-center gap-2 pb-2">

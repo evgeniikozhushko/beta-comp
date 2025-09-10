@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backup and temporary files
+*.backup
+node_modules_old/
+
+# duplicate/temp files
+*" 2."*
