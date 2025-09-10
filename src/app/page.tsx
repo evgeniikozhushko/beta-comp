@@ -1,25 +1,50 @@
 import Link from "next/link";
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function Home() {
-  // Check if user is authenticated
-  const session = await auth();
+  // Check if user is authenticated with timeout fallback
+  let session = null;
   
-  // Debug logging (remove this in production)
-  console.log('Session check:', session ? 'Authenticated' : 'Not authenticated');
+  try {
+    console.log('🚀 Starting authentication check...');
+    console.time('AUTH_CHECK');
+    
+    // Add timeout to auth check to prevent hanging
+    session = await Promise.race([
+      auth(),
+      new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error('Authentication timeout')), 5000)
+      )
+    ]);
+    
+    console.timeEnd('AUTH_CHECK');
+    console.log('Session check:', session ? 'Authenticated' : 'Not authenticated');
+  } catch (error) {
+    console.error('❌ Authentication failed:', error);
+    console.timeEnd('AUTH_CHECK');
+    
+    // If auth fails, redirect to sign-in page
+    console.log('Redirecting to sign-in due to auth error');
+    redirect("/sign-in");
+  }
   
   // If user is not authenticated, redirect to sign-in page
   if (!session) {
-    console.log('Redirecting to sign-in page');
+    console.log('Redirecting to sign-in page - no session');
     redirect("/sign-in");
   }
 
   console.log('User authenticated:', session.user.displayName);
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-4xl mx-auto">
+    <div>
+      {/* Header */}
+      <PageHeader user={session.user} />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto">
 
         {/* Welcome Section */}
         <div className="text-start mb-12">
@@ -88,6 +113,7 @@ text-primary-foreground hover:bg-primary/90 h-10 px-8 font-medium transition-col
             Get Started
           </Link>
         </div> */}
+        </div>
       </div>
     </div>
   );
