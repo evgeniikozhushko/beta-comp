@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation"
 import { auth } from "@/lib/auth";
-import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
 
 export default async function Home() {
   // Check if user is authenticated with timeout fallback
@@ -25,96 +25,104 @@ export default async function Home() {
     console.error('❌ Authentication failed:', error);
     console.timeEnd('AUTH_CHECK');
     
-    // If auth fails, redirect to sign-in page
-    console.log('Redirecting to sign-in due to auth error');
-    redirect("/sign-in");
+    // If auth fails, show welcome page for unauthenticated users
+    console.log('Auth error, showing welcome page');
   }
   
-  // If user is not authenticated, redirect to sign-in page
-  if (!session) {
-    console.log('Redirecting to sign-in page - no session');
-    redirect("/sign-in");
+  // If user is authenticated, redirect to dashboard
+  if (session) {
+    console.log('User authenticated, redirecting to dashboard:', session.user.displayName);
+    redirect("/dashboard");
   }
 
-  console.log('User authenticated:', session.user.displayName);
-
+  // Show welcome page for unauthenticated users
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <PageHeader user={session.user} />
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-4xl mx-auto">
-
-        {/* Welcome Section */}
-        <div className="text-start mb-12">
-          <h1 className="text-md font-bold">
-            Welcome, {session.user.displayName}!
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {session.user.email}
-          </p>
+      <header className="border-b">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <h1 className="text-xl font-bold">beta-comp</h1>
+            <div className="flex gap-2">
+              <Button variant="ghost" asChild>
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/sign-up">Sign Up</Link>
+              </Button>
+            </div>
+          </div>
         </div>
+      </header>
 
-        {/* Feature Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
-          {/* Event Management */}
-          <Link href="/events" className="group">
-            <div className="border rounded-lg p-6 hover:shadow-lg transition-all 
-group-hover:border-primary">
-              <div className="mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center 
-mb-3">1
+      {/* Main Content */}
+      <main className="flex-1 flex items-center justify-center">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Hero Section */}
+            <div className="mb-16">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                Competition Management
+                <br />
+                <span className="text-primary">Made Simple</span>
+              </h1>
+              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Streamline your competition events, manage athletes, and track results all in one powerful platform.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" asChild>
+                  <Link href="/sign-up">Get Started</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/sign-in">Sign In</Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Features Section */}
+            <div className="grid gap-8 md:grid-cols-3 mb-16">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-primary">1</span>
                 </div>
-                <h2 className="text-md font-semibold mb-2">Events</h2>
-                <p className="text-sm text-muted-foreground">
-                  Create, manage, and track competition events
+                <h3 className="text-xl font-semibold mb-2">Event Management</h3>
+                <p className="text-muted-foreground">
+                  Create, organize, and manage competition events with ease
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-primary">2</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Athlete Tracking</h3>
+                <p className="text-muted-foreground">
+                  Manage athlete profiles and track their competition history
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-primary">3</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Live Results</h3>
+                <p className="text-muted-foreground">
+                  Real-time scoring and comprehensive analytics dashboard
                 </p>
               </div>
             </div>
-          </Link>
-
-          {/* Athlete Database */}
-          <div className="border rounded-lg p-6 hover:shadow-lg transition-all opacity-50">
-            <div className="mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
-                2
-              </div>
-              <h2 className="text-md font-semibold mb-2">Athletes</h2>
-              <p className="text-sm text-muted-foreground">
-                Manage athlete profiles and information
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">Coming Soon</p>
-            </div>
-          </div>
-
-          {/* Live Scoring */}
-          <div className="border rounded-lg p-6 hover:shadow-lg transition-all opacity-50">
-            <div className="mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
-                3
-              </div>
-              <h2 className="text-md font-semibold mb-2">Stats</h2>
-              <p className="text-sm text-muted-foreground">
-                Real-time competition scoring, results and statistics
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">Coming Soon</p>
-            </div>
           </div>
         </div>
+      </main>
 
-        {/* Quick Actions */}
-        {/* <div className="text-center">
-          <Link 
-            href="/events"
-            className="inline-flex items-center justify-center rounded-md bg-primary 
-text-primary-foreground hover:bg-primary/90 h-10 px-8 font-medium transition-colors"
-          >
-            Get Started
-          </Link>
-        </div> */}
+      {/* Footer */}
+      <footer className="border-t py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-muted-foreground">
+            <p>&copy; 2024 beta-comp. Competition management platform.</p>
+          </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

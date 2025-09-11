@@ -59,9 +59,9 @@ export async function GET(request: Request) {
     console.log('🍪 Setting authentication cookie...');
     await setAuthCookie(user);
     
-    console.log('🏠 Redirecting to home page...');
-    // Redirect to the home page (user is now authenticated)
-    redirect('/');
+    console.log('🏠 Redirecting to dashboard...');
+    // Redirect to the dashboard (user is now authenticated)
+    redirect('/dashboard');
     
   } catch (error) {
     // Handle any errors during the OAuth process

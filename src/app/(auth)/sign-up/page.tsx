@@ -6,9 +6,9 @@ import { redirect } from "next/navigation";
 import { getErrorMessage } from "@/lib/getErrorMessage";
 
 export default async function Page() {
-  // If already signed in, send them home
+  // If already signed in, send them to dashboard
   const session = await auth();
-  if (session) redirect("/");
+  if (session) redirect("/dashboard");
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -50,8 +50,8 @@ export default async function Page() {
               throw new Error(friendlyMessage);
             }
             
-            // On success, redirect home (outside try/catch to avoid catching NEXT_REDIRECT)
-            redirect("/");
+            // On success, redirect to dashboard (outside try/catch to avoid catching NEXT_REDIRECT)
+            redirect("/dashboard");
           }}
         >
           <Input

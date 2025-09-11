@@ -23,8 +23,8 @@ export default async function Page() {
   // Check if user is already authenticated
   const session = await auth();
   
-  // If user is already logged in, redirect to home page
-  if (session) redirect("/");
+  // If user is already logged in, redirect to dashboard
+  if (session) redirect("/dashboard");
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -84,8 +84,8 @@ export default async function Page() {
               throw new Error(friendlyMessage);
             }
             
-            // On success, redirect home (outside try/catch to avoid catching NEXT_REDIRECT)
-            redirect('/');
+            // On success, redirect to dashboard (outside try/catch to avoid catching NEXT_REDIRECT)
+            redirect('/dashboard');
           }}
         >
           {/* Email input field */}
