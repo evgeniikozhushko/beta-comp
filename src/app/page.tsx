@@ -62,11 +62,11 @@ export default async function Home() {
             {/* Hero Section */}
             <div className="mb-32">
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                <span className="bg-gradient-to-r from-blue-700 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-900 to-purple-700 bg-clip-text text-transparent">
                   Competition Management
                 </span>
                 <br />
-                <span className="bg-gradient-to-r from-purple-700 via-pink-600 to-red-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-900 to-purple-700 bg-clip-text text-transparent">
                   Made Simple
                 </span>
               </h1>
@@ -75,7 +75,7 @@ export default async function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" asChild>
-                  <Link href="/sign-up">Get Started</Link>
+                  <Link href="/sign-up" className="bg-gradient-to-br from-blue-900 to-purple-800 text-white hover:opacity-90 transition">Get Started</Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
                   <Link href="/sign-in">Sign In</Link>
@@ -109,7 +109,7 @@ export default async function Home() {
                 {/* <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl font-bold text-primary">3</span>
                 </div> */}
-                <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-purple-700 via-pink-600 to-red-400 bg-clip-text text-transparent">Live Results</h3>
+                <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-blue-400 to-purple-700 bg-clip-text text-transparent">Live Results</h3>
                 <p className="text-muted-foreground">
                   Real-time scoring and comprehensive analytics dashboard
                 </p>
