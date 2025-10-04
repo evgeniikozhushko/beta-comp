@@ -14,6 +14,8 @@
   --primary-foreground: 0 0% 98%;
   --secondary: 285.823 5% 96%;
   --secondary-foreground: 285.823 0.5% 14.1%;
+  --tertiary: oklch(0.708 0 0);
+  --tertiary-foreground: oklch(0.205 0 0);
   --muted: 285.823 5% 96%;
   --muted-foreground: 285.823 0.4% 45.1%;
   --accent: 285.823 5% 96%;
