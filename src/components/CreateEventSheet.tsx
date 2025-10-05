@@ -3,6 +3,7 @@
 
 import React, { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Sheet,
   SheetTrigger,
@@ -44,6 +45,7 @@ export default function CreateEventSheet({
   const [pending, setPending] = useState(false);
   const [createdCount, setCreatedCount] = useState(0);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Determine if this is externally controlled
   const isExternallyControlled = externalOpen !== undefined && externalOnOpenChange !== undefined;
@@ -65,10 +67,11 @@ export default function CreateEventSheet({
     (id: string, name: string) => {
       setCreatedCount((c) => c + 1);
       router.refresh(); // refresh grid behind the sheet
+      queryClient.invalidateQueries(['eventDates']); // invalidate calendar cache
       toast.success(`Event "${name}" created successfully!`);
       // Keep the sheet open for rapid entry (original behavior)
     },
-    [router]
+    [router, queryClient]
   );
 
   // Reset pending state when sheet closes
