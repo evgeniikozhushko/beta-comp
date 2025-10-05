@@ -8,12 +8,15 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { useRouter, usePathname } from "next/navigation"
 
 export function Calendars() {
   const { state } = useSidebar()
   const [date, setDate] = useState<Date | undefined>(new Date())
+  const router = useRouter()
+  const pathname = usePathname()
 
   // Fetch event dates from API
   const { data: eventDatesData } = useQuery({
@@ -39,8 +42,24 @@ export function Calendars() {
     }
   }, [eventDates])
 
-  // Log for testing
-  console.log('Event dates:', Array.from(eventDates))
+  // Handle date selection - navigate to dashboard with date param if event exists
+  const handleDateSelect = useCallback((selectedDate: Date | undefined) => {
+    setDate(selectedDate)
+
+    if (selectedDate) {
+      const dateString = selectedDate.toISOString().split('T')[0]
+      // Only navigate if this date has events
+      if (eventDates.has(dateString)) {
+        // If not on dashboard, navigate there with the date param
+        if (pathname !== '/dashboard') {
+          router.push(`/dashboard?date=${dateString}`)
+        } else {
+          // Already on dashboard, just update the URL param
+          router.push(`/dashboard?date=${dateString}`, { scroll: false })
+        }
+      }
+    }
+  }, [eventDates, router, pathname])
 
   return (
     <SidebarGroup className="px-0">
@@ -49,7 +68,7 @@ export function Calendars() {
           <CalendarUI
             mode="single"
             selected={date}
-            onSelect={setDate}
+            onSelect={handleDateSelect}
             modifiers={{ hasEvent }}
             modifiersClassNames={{
               hasEvent: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full"

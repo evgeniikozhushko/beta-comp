@@ -3,14 +3,16 @@ import { hasPermission } from "@/lib/types/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BarChart3, Settings } from "lucide-react";
 import Link from "next/link";
+import { Suspense } from "react";
 import CreateEventCard from "@/app/dashboard/CreateEventCard";
-import EventAccordion from "@/components/EventAccordion";
+import EventAccordionWrapper from "@/components/EventAccordionWrapper";
 import { mongoConnect } from "@/lib/mongodb";
 import Facility from "@/lib/models/Facility";
 import Event from "@/lib/models/Event";
 import Registration from "@/lib/models/Registration";
 import { Types } from "mongoose";
 import { serializeMongooseArray, SerializedEvent, SerializedFacility } from "@/lib/utils/serialize";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface RegistrationData {
   eventId: string;
@@ -357,16 +359,30 @@ export default async function DashboardPage() {
         </div> */}
 
         {/* Events Accordion */}
-        <EventAccordion
-          events={events}
-          facilities={facilities}
-          userRegistrations={userRegistrations}
-          userCanRegister={userCanRegister}
-          userRole={session.user.role}
-          userId={session.user.id}
-          isLoading={isLoading}
-          error={error}
-        />
+        <Suspense fallback={
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Events</h2>
+              <Skeleton className="h-8 w-32" />
+            </div>
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          </div>
+        }>
+          <EventAccordionWrapper
+            events={events}
+            facilities={facilities}
+            userRegistrations={userRegistrations}
+            userCanRegister={userCanRegister}
+            userRole={session.user.role}
+            userId={session.user.id}
+            isLoading={isLoading}
+            error={error}
+          />
+        </Suspense>
     </div>
   );
 }

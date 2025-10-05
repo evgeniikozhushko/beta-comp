@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { Accordion } from "@/components/ui/accordion"
 import EventAccordionItem from "@/components/EventAccordionItem"
 import YearFilter from "@/components/YearFilter"
@@ -43,6 +43,7 @@ interface EventAccordionProps {
   userId?: string
   isLoading?: boolean
   error?: string | null
+  selectedDate?: string | null // Optional date filter (YYYY-MM-DD format)
 }
 
 export default function EventAccordion({
@@ -53,8 +54,11 @@ export default function EventAccordion({
   userRole,
   userId,
   isLoading = false,
-  error = null
+  error = null,
+  selectedDate = null
 }: EventAccordionProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const firstMatchingEventRef = useRef<HTMLDivElement>(null)
   // Extract available years from events and get current year
   const availableYears = useMemo(() => {
     const years = events.map(event => new Date(event.date).getFullYear())
@@ -64,6 +68,19 @@ export default function EventAccordion({
 
   const [selectedYear, setSelectedYear] = useState(availableYears[0] || new Date().getFullYear())
 
+  // Helper function to check if a date falls within an event's date range
+  const eventIncludesDate = useMemo(() => {
+    return (event: EventData, targetDate: string) => {
+      const eventStartDate = new Date(event.date)
+      const eventEndDate = new Date(eventStartDate)
+      eventEndDate.setDate(eventStartDate.getDate() + (event.durationDays - 1))
+
+      const target = new Date(targetDate)
+
+      return target >= eventStartDate && target <= eventEndDate
+    }
+  }, [])
+
   // Filter events by selected year and sort by date
   const filteredEvents = useMemo(() => {
     return events
@@ -71,9 +88,32 @@ export default function EventAccordion({
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Earliest first
   }, [events, selectedYear])
 
+  // Find events matching the selected date
+  const matchingEventIds = useMemo(() => {
+    if (!selectedDate) return new Set<string>()
+    return new Set(
+      filteredEvents
+        .filter(event => eventIncludesDate(event, selectedDate))
+        .map(event => event._id)
+    )
+  }, [selectedDate, filteredEvents, eventIncludesDate])
+
   const handleYearChange = (year: number) => {
     setSelectedYear(year)
   }
+
+  // Scroll to first matching event when selectedDate changes
+  useEffect(() => {
+    if (selectedDate && matchingEventIds.size > 0 && firstMatchingEventRef.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        firstMatchingEventRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+      }, 100)
+    }
+  }, [selectedDate, matchingEventIds])
 
   // Loading state
   if (isLoading) {
@@ -131,12 +171,15 @@ export default function EventAccordion({
       </div>
 
       {/* Events Accordion with Scrollable Container */}
-      <div className="max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      <div
+        ref={scrollContainerRef}
+        className="max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+      >
         {filteredEvents.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">
-              {events.length === 0 
-                ? "No events found." 
+              {events.length === 0
+                ? "No events found."
                 : `No events found for ${selectedYear}.`
               }
             </p>
@@ -147,25 +190,32 @@ export default function EventAccordion({
             )}
           </div>
         ) : (
-          <Accordion 
-            type="single" 
-            collapsible 
+          <Accordion
+            type="single"
+            collapsible
             className="w-full space-y-2"
           >
-            {filteredEvents.map((event) => {
+            {filteredEvents.map((event, index) => {
               const eventId = event._id.toString()
               const userRegistrationStatus = (userRegistrations[eventId] as "registered" | "waitlisted") || null
+              const isMatchingDate = matchingEventIds.has(eventId)
+              const isFirstMatch = isMatchingDate && index === filteredEvents.findIndex(e => matchingEventIds.has(e._id))
 
               return (
-                <EventAccordionItem
+                <div
                   key={eventId}
-                  event={event}
-                  facilities={facilities}
-                  userRegistrationStatus={userRegistrationStatus}
-                  userCanRegister={userCanRegister}
-                  userRole={userRole}
-                  userId={userId}
-                />
+                  ref={isFirstMatch ? firstMatchingEventRef : null}
+                  className={isMatchingDate ? "ring-2 ring-primary rounded-lg transition-all" : ""}
+                >
+                  <EventAccordionItem
+                    event={event}
+                    facilities={facilities}
+                    userRegistrationStatus={userRegistrationStatus}
+                    userCanRegister={userCanRegister}
+                    userRole={userRole}
+                    userId={userId}
+                  />
+                </div>
               )
             })}
           </Accordion>
