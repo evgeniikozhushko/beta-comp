@@ -71,13 +71,23 @@ export default function EventAccordion({
   // Helper function to check if a date falls within an event's date range
   const eventIncludesDate = useMemo(() => {
     return (event: EventData, targetDate: string) => {
+      // Format event start date as YYYY-MM-DD (avoid timezone issues)
       const eventStartDate = new Date(event.date)
+      const eventStartYear = eventStartDate.getFullYear()
+      const eventStartMonth = String(eventStartDate.getMonth() + 1).padStart(2, '0')
+      const eventStartDay = String(eventStartDate.getDate()).padStart(2, '0')
+      const eventStartString = `${eventStartYear}-${eventStartMonth}-${eventStartDay}`
+
+      // Calculate end date
       const eventEndDate = new Date(eventStartDate)
       eventEndDate.setDate(eventStartDate.getDate() + (event.durationDays - 1))
+      const eventEndYear = eventEndDate.getFullYear()
+      const eventEndMonth = String(eventEndDate.getMonth() + 1).padStart(2, '0')
+      const eventEndDay = String(eventEndDate.getDate()).padStart(2, '0')
+      const eventEndString = `${eventEndYear}-${eventEndMonth}-${eventEndDay}`
 
-      const target = new Date(targetDate)
-
-      return target >= eventStartDate && target <= eventEndDate
+      // Compare date strings instead of Date objects to avoid timezone issues
+      return targetDate >= eventStartString && targetDate <= eventEndString
     }
   }, [])
 
@@ -205,7 +215,7 @@ export default function EventAccordion({
                 <div
                   key={eventId}
                   ref={isFirstMatch ? firstMatchingEventRef : null}
-                  className={isMatchingDate ? "ring-2 ring-primary rounded-lg transition-all" : ""}
+                  className={isMatchingDate ? "bg-muted rounded-lg transition-all" : ""}
                 >
                   <EventAccordionItem
                     event={event}

@@ -37,7 +37,11 @@ export function Calendars() {
   // Create a matcher function for event dates
   const hasEvent = useMemo(() => {
     return (day: Date) => {
-      const dateString = day.toISOString().split('T')[0]
+      // Format as YYYY-MM-DD using local date (avoid timezone conversion)
+      const year = day.getFullYear()
+      const month = String(day.getMonth() + 1).padStart(2, '0')
+      const dayNum = String(day.getDate()).padStart(2, '0')
+      const dateString = `${year}-${month}-${dayNum}`
       return eventDates.has(dateString)
     }
   }, [eventDates])
@@ -47,7 +51,11 @@ export function Calendars() {
     setDate(selectedDate)
 
     if (selectedDate) {
-      const dateString = selectedDate.toISOString().split('T')[0]
+      // Format as YYYY-MM-DD using local date (avoid timezone conversion)
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(selectedDate.getDate()).padStart(2, '0')
+      const dateString = `${year}-${month}-${day}`
       // Only navigate if this date has events
       if (eventDates.has(dateString)) {
         // If not on dashboard, navigate there with the date param

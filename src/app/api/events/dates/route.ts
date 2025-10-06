@@ -25,8 +25,11 @@ export async function GET() {
       for (let i = 0; i < duration; i++) {
         const currentDate = new Date(startDate);
         currentDate.setDate(startDate.getDate() + i);
-        // Format as YYYY-MM-DD
-        const dateString = currentDate.toISOString().split('T')[0];
+        // Format as YYYY-MM-DD using local date (avoid timezone conversion)
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
         dateSet.add(dateString);
       }
     });
