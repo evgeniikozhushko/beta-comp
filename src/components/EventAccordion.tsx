@@ -59,6 +59,8 @@ export default function EventAccordion({
 }: EventAccordionProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const firstMatchingEventRef = useRef<HTMLDivElement>(null)
+  const [highlightedDate, setHighlightedDate] = useState<string | null>(null)
+
   // Extract available years from events and get current year
   const availableYears = useMemo(() => {
     const years = events.map(event => new Date(event.date).getFullYear())
@@ -115,6 +117,9 @@ export default function EventAccordion({
   // Scroll to first matching event when selectedDate changes
   useEffect(() => {
     if (selectedDate && matchingEventIds.size > 0 && firstMatchingEventRef.current) {
+      // Set highlight immediately
+      setHighlightedDate(selectedDate)
+
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         firstMatchingEventRef.current?.scrollIntoView({
@@ -122,6 +127,13 @@ export default function EventAccordion({
           block: 'center'
         })
       }, 100)
+
+      // Remove highlight after 1 second
+      const timer = setTimeout(() => {
+        setHighlightedDate(null)
+      }, 1000)
+
+      return () => clearTimeout(timer)
     }
   }, [selectedDate, matchingEventIds])
 
@@ -210,12 +222,13 @@ export default function EventAccordion({
               const userRegistrationStatus = (userRegistrations[eventId] as "registered" | "waitlisted") || null
               const isMatchingDate = matchingEventIds.has(eventId)
               const isFirstMatch = isMatchingDate && index === filteredEvents.findIndex(e => matchingEventIds.has(e._id))
+              const shouldHighlight = isMatchingDate && highlightedDate === selectedDate
 
               return (
                 <div
                   key={eventId}
                   ref={isFirstMatch ? firstMatchingEventRef : null}
-                  className={isMatchingDate ? "bg-muted rounded-lg transition-all" : ""}
+                  className={shouldHighlight ? "bg-primary/10 rounded-sm transition-colors duration-500" : ""}
                 >
                   <EventAccordionItem
                     event={event}
