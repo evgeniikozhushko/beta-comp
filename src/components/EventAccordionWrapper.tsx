@@ -43,7 +43,7 @@ interface EventAccordionWrapperProps {
 
 export default function EventAccordionWrapper(props: EventAccordionWrapperProps) {
   const searchParams = useSearchParams()
-  const selectedDate = searchParams.get('date')
+  const selectedDate = searchParams?.get('date') ?? null
 
   return <EventAccordion {...props} selectedDate={selectedDate} />
 }

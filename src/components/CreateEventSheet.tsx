@@ -67,7 +67,7 @@ export default function CreateEventSheet({
     (id: string, name: string) => {
       setCreatedCount((c) => c + 1);
       router.refresh(); // refresh grid behind the sheet
-      queryClient.invalidateQueries(['eventDates']); // invalidate calendar cache
+      queryClient.invalidateQueries({ queryKey: ['eventDates'] }); // invalidate calendar cache
       toast.success(`Event "${name}" created successfully!`);
       // Keep the sheet open for rapid entry (original behavior)
     },
