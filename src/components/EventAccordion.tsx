@@ -228,7 +228,7 @@ export default function EventAccordion({
                 <div
                   key={eventId}
                   ref={isFirstMatch ? firstMatchingEventRef : null}
-                  className={shouldHighlight ? "bg-primary/10 rounded-sm transition-colors duration-500" : ""}
+                  className={shouldHighlight ? "bg-primary/10 rounded-sm transition-colors duration-2000" : ""}
                 >
                   <EventAccordionItem
                     event={event}
