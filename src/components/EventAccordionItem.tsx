@@ -57,6 +57,17 @@ export default function EventAccordionItem({
 }: EventAccordionItemProps) {
   const eventId = event._id.toString()
 
+  // Helper function to format date without timezone conversion
+  const formatLocalDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC' // Display the UTC date as-is without conversion
+    })
+  }
+
   // Registration status logic
   const getEventRegistrationStatus = (event: EventData) => {
     if (event.allowRegistration === false) return 'closed'
@@ -66,7 +77,7 @@ export default function EventAccordionItem({
   }
 
   const eventStatus = getEventRegistrationStatus(event)
-  
+
   // Format date for display
   const eventDate = new Date(event.date)
   const formattedDate = eventDate.toLocaleDateString('en-US', {
@@ -162,7 +173,7 @@ export default function EventAccordionItem({
               <div>
                 <span className="font-medium text-foreground">Registration Deadline:</span>
                 <p className="text-muted-foreground mt-1">
-                  {new Date(event.registrationDeadline).toLocaleDateString()}
+                  {formatLocalDate(event.registrationDeadline)}
                 </p>
               </div>
             )}

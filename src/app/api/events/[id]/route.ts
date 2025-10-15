@@ -75,7 +75,7 @@ export async function GET(
       division: event.division,
       description: event.description || "",
       registrationDeadline: event.registrationDeadline
-        ? event.registrationDeadline.toISOString().slice(0, 10) // Format for date input
+        ? `${event.registrationDeadline.getFullYear()}-${String(event.registrationDeadline.getMonth() + 1).padStart(2, '0')}-${String(event.registrationDeadline.getDate()).padStart(2, '0')}` // Format for date input without UTC conversion
         : "",
       maxParticipants: event.maxParticipants || "",
       entryFee: event.entryFee || "",
@@ -235,7 +235,7 @@ export async function PUT(
       division: updatedEvent.division,
       description: updatedEvent.description || "",
       registrationDeadline: updatedEvent.registrationDeadline
-        ? updatedEvent.registrationDeadline.toISOString().slice(0, 10)
+        ? `${updatedEvent.registrationDeadline.getFullYear()}-${String(updatedEvent.registrationDeadline.getMonth() + 1).padStart(2, '0')}-${String(updatedEvent.registrationDeadline.getDate()).padStart(2, '0')}`
         : "",
       maxParticipants: updatedEvent.maxParticipants || "",
       entryFee: updatedEvent.entryFee || "",
