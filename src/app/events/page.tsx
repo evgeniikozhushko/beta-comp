@@ -26,6 +26,7 @@ import { hasPermission, canManageEvent } from "@/lib/types/permissions";
 import Registration from '@/lib/models/Registration';
 import { Types } from 'mongoose';
 import { PageHeader } from "@/components/PageHeader";
+import { isAfterDeadline } from "@/lib/utils/dateUtils";
 
 /**
  * EventsPage
@@ -150,7 +151,7 @@ export default async function EventsPage() {
               const getEventRegistrationStatus = (event: any) => {
                 // Default to allowing registration if field doesn't exist
                 if (event.allowRegistration === false) return 'closed';
-                if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) return 'closed';
+                if (event.registrationDeadline && isAfterDeadline(event.registrationDeadline)) return 'closed';
                 if (event.maxCapacity > 0 && (event.registrationCount || 0) >= event.maxCapacity) return 'full';
                 return 'open';
               };

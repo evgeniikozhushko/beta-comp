@@ -9,6 +9,7 @@ import Facility from "@/lib/models/Facility";
 import { auth } from "@/lib/auth";
 import { hasPermission, canManageEvent } from "@/lib/types/permissions";
 import Registration from '@/lib/models/Registration';
+import { isAfterDeadline } from "@/lib/utils/dateUtils";
 
 // Return shape for useActionState
 export type CreateEventState =
@@ -754,7 +755,7 @@ export async function unregisterFromEventAction(eventId: string) {
     }
 
     // 5. Check if unregistration is allowed (before deadline)
-    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
+    if (event.registrationDeadline && isAfterDeadline(event.registrationDeadline)) {
       return {
         success: false,
         error: 'Cannot unregister after registration deadline'

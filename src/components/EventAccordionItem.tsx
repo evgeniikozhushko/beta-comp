@@ -11,6 +11,7 @@ import UpdateEventSheet from "@/components/UpdateEventSheet"
 import DeleteEventButton from "@/components/DeleteEventButton"
 import { canManageEvent, UserRole } from "@/lib/types/permissions"
 import { Badge } from "@/components/ui/badge"
+import { isAfterDeadline } from "@/lib/utils/dateUtils"
 
 type FacilityOption = { id: string; name: string }
 
@@ -71,7 +72,7 @@ export default function EventAccordionItem({
   // Registration status logic
   const getEventRegistrationStatus = (event: EventData) => {
     if (event.allowRegistration === false) return 'closed'
-    if (event.registrationDeadline && new Date() > new Date(event.registrationDeadline)) return 'closed'
+    if (event.registrationDeadline && isAfterDeadline(event.registrationDeadline)) return 'closed'
     if (event.maxCapacity && event.maxCapacity > 0 && (event.registrationCount || 0) >= event.maxCapacity) return 'full'
     return 'open'
   }

@@ -1,5 +1,6 @@
 // models/Event.ts
 import mongoose, { Schema, Document, model, models, Types } from "mongoose";
+import { isAfterDeadline } from "@/lib/utils/dateUtils";
 
 export interface IEvent extends Document {
   // Required core info
@@ -104,7 +105,7 @@ const EventSchema = new Schema<IEvent>(
 // Add these methods to your Event schema before export
 EventSchema.methods.isRegistrationOpen = function() {
   if (!this.allowRegistration) return false;
-  if (this.registrationDeadline && new Date() > this.registrationDeadline) return false;
+  if (this.registrationDeadline && isAfterDeadline(this.registrationDeadline)) return false;
   return true;
 };
 
