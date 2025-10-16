@@ -94,7 +94,7 @@ export default function EventAccordionItem({
   // Get status badge variant
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'open': return 'active'
+      case 'open': return 'open'
       case 'full': return 'secondary' 
       case 'closed': return 'destructive'
       default: return 'outline'
@@ -108,7 +108,7 @@ export default function EventAccordionItem({
           <div className="flex items-center justify-start w-full">
             <span className="font-semibold text-base">{event.name}</span>
             <Badge variant={getStatusBadgeVariant(eventStatus)} className="ml-4">
-              {eventStatus === 'open' ? 'Active' : eventStatus === 'full' ? 'Full' : 'Closed'}
+              {eventStatus === 'open' ? 'Open' : eventStatus === 'full' ? 'Full' : 'Closed'}
             </Badge>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">

@@ -1,41 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation"
-import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
-export default async function Home() {
-  // Check if user is authenticated with timeout fallback
-  let session = null;
-  
-  try {
-    console.log('🚀 Starting authentication check...');
-    console.time('AUTH_CHECK');
-    
-    // Add timeout to auth check to prevent hanging
-    session = await Promise.race([
-      auth(),
-      new Promise<null>((_, reject) => 
-        setTimeout(() => reject(new Error('Authentication timeout')), 5000)
-      )
-    ]);
-    
-    console.timeEnd('AUTH_CHECK');
-    console.log('Session check:', session ? 'Authenticated' : 'Not authenticated');
-  } catch (error) {
-    console.error('❌ Authentication failed:', error);
-    console.timeEnd('AUTH_CHECK');
-    
-    // If auth fails, show welcome page for unauthenticated users
-    console.log('Auth error, showing welcome page');
-  }
-  
-  // If user is authenticated, redirect to dashboard
-  if (session) {
-    console.log('User authenticated, redirecting to dashboard:', session.user.displayName);
-    redirect("/dashboard");
-  }
-
-  // Show welcome page for unauthenticated users
+export default function Home() {
+  // This is a public landing page - no auth check needed here
+  // Auth protection is handled by middleware for protected routes
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}

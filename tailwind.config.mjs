@@ -42,9 +42,9 @@ const config = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))'
         },
-        active: {
-          DEFAULT: 'hsl(var(--active))',
-          foreground: 'hsl(var(--active-foreground))'
+        open: {
+          DEFAULT: 'hsl(var(--open))',
+          foreground: 'hsl(var(--open-foreground))'
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
