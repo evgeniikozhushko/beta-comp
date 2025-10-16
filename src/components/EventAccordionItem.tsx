@@ -94,7 +94,7 @@ export default function EventAccordionItem({
   // Get status badge variant
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'open': return 'default'
+      case 'open': return 'active'
       case 'full': return 'secondary' 
       case 'closed': return 'destructive'
       default: return 'outline'

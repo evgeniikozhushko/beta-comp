@@ -23,6 +23,8 @@
   --accent-foreground: 285.823 0.5% 14.1%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
+  --active: 142 76% 36%;
+  --active-foreground: 0 0% 98%;
   --border: 285.823 3% 89.2%;
   --input: 285.823 3% 89.2%;
   --ring: 285.823 0.5% 14.1%;
@@ -58,6 +60,8 @@
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
+  --active: 292 51.3% 18.2%;
+  --active-foreground: 0 0% 98%;
   --border: 285.823 3% 14.1%;
   --input: 285.823 3% 14.1%;
   --ring: 285.823 0.1% 83.9%;
