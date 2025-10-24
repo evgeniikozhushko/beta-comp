@@ -6,6 +6,7 @@ export interface IRegistration extends Document {
     eventId: Types.ObjectId;
     registeredAt: Date;
     status: 'registered' | 'waitlisted' | 'cancelled';
+    cancelledAt?: Date; // Timestamp when registration was cancelled
     createdAt: Date;
     updatedAt: Date;
 }
@@ -33,6 +34,10 @@ const RegistrationSchema = new Schema<IRegistration>({
         enum: ['registered', 'waitlisted', 'cancelled'],
         default: 'registered',
         required: true
+    },
+    cancelledAt: {
+        type: Date,
+        required: false
     }
 }, {
     timestamps: true,

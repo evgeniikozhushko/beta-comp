@@ -28,6 +28,10 @@ export interface IEvent extends Document {
   registrationCount?: number;
   waitlistCount?: number;
 
+  // Archival fields
+  isArchived?: boolean; // Whether event is archived
+  archivedAt?: Date; // When the event was archived
+
   // Timestamps
   createdAt: Date;
   updatedAt: Date;
@@ -97,6 +101,15 @@ const EventSchema = new Schema<IEvent>(
       type: Number,
       default: 0,
       min: 0
+    },
+    // Archival fields
+    isArchived: {
+      type: Boolean,
+      default: false
+    },
+    archivedAt: {
+      type: Date,
+      required: false
     }
   },
   { timestamps: true }

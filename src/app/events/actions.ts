@@ -780,7 +780,10 @@ export async function unregisterFromEventAction(eventId: string) {
       // Update registration to cancelled
       await Registration.findByIdAndUpdate(
         originalRegistration._id,
-        { status: 'cancelled' },
+        {
+          status: 'cancelled',
+          cancelledAt: new Date()
+        },
         { session: mongoSession }
       );
 
@@ -903,5 +906,119 @@ export async function getEventRegistrations(eventId: string) {
   } catch (error) {
     console.error('Error getting event registrations:', error);
     return { success: false, error: 'Failed to get registrations' };
+  }
+}
+
+// Archive event action
+export async function archiveEventAction(eventId: string) {
+  try {
+    // 1. Authentication check
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // 2. Connect to database
+    await mongoConnect();
+
+    // 3. Validate event ID
+    if (!Types.ObjectId.isValid(eventId)) {
+      return { success: false, error: 'Invalid event ID' };
+    }
+
+    // 4. Find event
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return { success: false, error: 'Event not found' };
+    }
+
+    // 5. Authorization check - only event creator or admin/owner can archive
+    if (!canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'update')) {
+      return {
+        success: false,
+        error: 'Not authorized to archive this event'
+      };
+    }
+
+    // 6. Check if event is already archived
+    if (event.isArchived) {
+      return { success: false, error: 'Event is already archived' };
+    }
+
+    // 7. Archive the event
+    await Event.findByIdAndUpdate(
+      eventId,
+      {
+        isArchived: true,
+        archivedAt: new Date()
+      }
+    );
+
+    // 8. Revalidate relevant pages
+    revalidatePath('/dashboard');
+    revalidatePath('/events');
+
+    return { success: true, message: 'Event archived successfully' };
+
+  } catch (error) {
+    console.error('Error archiving event:', error);
+    return { success: false, error: 'Failed to archive event' };
+  }
+}
+
+// Unarchive event action
+export async function unarchiveEventAction(eventId: string) {
+  try {
+    // 1. Authentication check
+    const session = await auth();
+    if (!session) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // 2. Connect to database
+    await mongoConnect();
+
+    // 3. Validate event ID
+    if (!Types.ObjectId.isValid(eventId)) {
+      return { success: false, error: 'Invalid event ID' };
+    }
+
+    // 4. Find event
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return { success: false, error: 'Event not found' };
+    }
+
+    // 5. Authorization check
+    if (!canManageEvent(session.user.role, event.createdBy.toString(), session.user.id, 'update')) {
+      return {
+        success: false,
+        error: 'Not authorized to unarchive this event'
+      };
+    }
+
+    // 6. Check if event is archived
+    if (!event.isArchived) {
+      return { success: false, error: 'Event is not archived' };
+    }
+
+    // 7. Unarchive the event
+    await Event.findByIdAndUpdate(
+      eventId,
+      {
+        isArchived: false,
+        archivedAt: undefined
+      }
+    );
+
+    // 8. Revalidate relevant pages
+    revalidatePath('/dashboard');
+    revalidatePath('/events');
+
+    return { success: true, message: 'Event restored from archive' };
+
+  } catch (error) {
+    console.error('Error unarchiving event:', error);
+    return { success: false, error: 'Failed to unarchive event' };
   }
 }

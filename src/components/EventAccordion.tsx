@@ -5,8 +5,9 @@ import { Accordion } from "@/components/ui/accordion"
 import EventAccordionItem from "@/components/EventAccordionItem"
 import YearFilter from "@/components/YearFilter"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Archive } from "lucide-react"
 import { UserRole } from "@/lib/types/permissions"
+import { Button } from "@/components/ui/button"
 
 type FacilityOption = { id: string; name: string }
 
@@ -32,6 +33,7 @@ interface EventData {
   registrationCount?: number
   allowRegistration?: boolean
   createdBy: string
+  isArchived?: boolean
 }
 
 interface EventAccordionProps {
@@ -60,6 +62,7 @@ export default function EventAccordion({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const firstMatchingEventRef = useRef<HTMLDivElement>(null)
   const [highlightedDate, setHighlightedDate] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
 
   // Extract available years from events and get current year
   const availableYears = useMemo(() => {
@@ -93,12 +96,16 @@ export default function EventAccordion({
     }
   }, [])
 
-  // Filter events by selected year and sort by date
+  // Filter events by selected year, archive status, and sort by date
   const filteredEvents = useMemo(() => {
     return events
-      .filter(event => new Date(event.date).getFullYear() === selectedYear)
+      .filter(event => {
+        const matchesYear = new Date(event.date).getFullYear() === selectedYear
+        const matchesArchiveFilter = showArchived ? event.isArchived === true : !event.isArchived
+        return matchesYear && matchesArchiveFilter
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Earliest first
-  }, [events, selectedYear])
+  }, [events, selectedYear, showArchived])
 
   // Find events matching the selected date
   const matchingEventIds = useMemo(() => {
@@ -172,24 +179,35 @@ export default function EventAccordion({
 
   return (
     <div className="space-y-6">
-      {/* Header with Year Filter */}
+      {/* Header with Year Filter and Archive Toggle */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">
-          Events 
+          Events
           {filteredEvents.length > 0 && (
             <span className="ml-2 text-sm font-normal text-muted-foreground">
               ({filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''})
             </span>
           )}
         </h2>
-        
-        {availableYears.length > 1 && (
-          <YearFilter
-            selectedYear={selectedYear}
-            availableYears={availableYears}
-            onYearChange={handleYearChange}
-          />
-        )}
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <Archive className="mr-2 h-4 w-4" />
+            {showArchived ? "Viewing Archived" : "Show Archived"}
+          </Button>
+
+          {availableYears.length > 1 && (
+            <YearFilter
+              selectedYear={selectedYear}
+              availableYears={availableYears}
+              onYearChange={handleYearChange}
+            />
+          )}
+        </div>
       </div>
 
       {/* Events Accordion with Scrollable Container */}

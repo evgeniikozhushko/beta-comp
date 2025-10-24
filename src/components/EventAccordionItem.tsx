@@ -12,6 +12,8 @@ import DeleteEventButton from "@/components/DeleteEventButton"
 import { canManageEvent, UserRole } from "@/lib/types/permissions"
 import { Badge } from "@/components/ui/badge"
 import { isAfterDeadline } from "@/lib/utils/dateUtils"
+import Link from "next/link"
+import { BarChart3 } from "lucide-react"
 
 type FacilityOption = { id: string; name: string }
 
@@ -209,6 +211,12 @@ export default function EventAccordionItem({
         {userRole && userId && canManageEvent(userRole, event.createdBy, userId, 'update') && (
           <div className="border-t pt-4">
             <div className="flex gap-2 flex-wrap">
+              <Link href={`/dashboard/analytics/${eventId}`}>
+                <Button variant="outline" size="sm">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  View Analytics
+                </Button>
+              </Link>
               <UpdateEventSheet
                 facilities={facilities}
                 eventId={eventId}
