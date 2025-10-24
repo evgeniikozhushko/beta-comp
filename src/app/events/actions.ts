@@ -264,24 +264,53 @@ export async function createEventAction(
       }, null, 2));
 
       // 7. Verify event was actually saved within transaction
-      console.log('🔍 Verifying event was saved to database...');
+      console.log('🔍 Verifying event was saved to database (within transaction scope)...');
       const savedEvent = await Event.findById(newEvent[0]._id).session(mongoSession);
       if (!savedEvent) {
         console.log('❌ Event creation succeeded but verification failed - event not found in database');
         throw new Error('Event was created but could not be verified in database');
       }
-      console.log('✅ Event verification successful - event exists in database');
-      
+      console.log('✅ Event verification successful - event exists in database (within transaction)');
+
       return newEvent[0];
     });
 
     console.log('✅ Transaction completed successfully');
 
-    // 8. Mark the /events route stale (fresh data will be ready)
+    // 8. CRITICAL: Verify event persisted OUTSIDE transaction scope (after commit)
+    console.log('🔍 CRITICAL CHECK: Verifying event persisted after transaction commit...');
+    await new Promise(resolve => setTimeout(resolve, 100)); // Brief wait for transaction propagation
+
+    const persistedEvent = await Event.findById(result._id);
+    if (!persistedEvent) {
+      console.error('❌❌❌ CRITICAL ISSUE: Event was created within transaction but DID NOT persist after commit!');
+      console.error('❌ Event ID:', result._id.toString());
+      console.error('❌ This indicates a MongoDB transaction/replica set configuration issue');
+      console.error('💡 The transaction appeared successful but data was not committed to the database');
+
+      // Log this critical failure for monitoring
+      console.error('❌ TRANSACTION PERSISTENCE FAILURE - Event:', {
+        eventId: result._id.toString(),
+        eventName: result.name,
+        userId: session.user.id,
+        timestamp: new Date().toISOString()
+      });
+
+      return {
+        pending: false,
+        error: "EVENT_NOT_PERSISTED",
+        values: raw
+      };
+    }
+
+    console.log('✅✅✅ SUCCESS: Event verified to persist after transaction commit!');
+    console.log('✅ Event is now permanently stored in database:', persistedEvent._id.toString());
+
+    // 9. Mark the /events route stale (fresh data will be ready)
     console.log('🔄 Revalidating /events path...');
     revalidatePath("/events");
 
-    // 9. Return success (no redirect) → client decides what to do
+    // 10. Return success (no redirect) → client decides what to do
     console.log('🎉 Event creation process completed successfully');
     return {
       pending: false,

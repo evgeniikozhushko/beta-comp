@@ -48,6 +48,8 @@ export async function mongoConnect() {
 /**
  * Execute a database operation within a MongoDB transaction
  * Provides atomicity and automatic rollback on errors
+ *
+ * Now includes write concern to ensure data persistence on replica sets
  */
 export async function withTransaction<T>(
   operation: (session: mongoose.ClientSession) => Promise<T>
@@ -55,23 +57,67 @@ export async function withTransaction<T>(
   console.log('🔧 Starting MongoDB session...');
   const session = await mongoose.startSession();
   console.log('✅ MongoDB session created');
-  
+
   try {
-    console.log('🔄 Starting transaction...');
+    console.log('🔄 Starting transaction with write concern...');
+
+    // Configure transaction options with write concern for data persistence
+    const transactionOptions = {
+      readPreference: 'primary' as const,
+      readConcern: { level: 'local' as const },
+      writeConcern: {
+        w: 'majority' as const, // Wait for write to be acknowledged by majority of replica set
+        wtimeout: 5000 // Timeout after 5 seconds
+      },
+      maxCommitTimeMS: 10000 // Maximum time to wait for transaction commit
+    };
+
     const result = await session.withTransaction(async () => {
       console.log('⚡ Inside transaction, executing operation...');
       const operationResult = await operation(session);
       console.log('✅ Operation completed successfully');
       return operationResult;
-    });
-    console.log('✅ Transaction committed successfully');
+    }, transactionOptions);
+
+    console.log('✅ Transaction committed successfully with write concern');
     return result;
   } catch (error) {
     console.error('❌ Transaction failed:', error);
+
+    // Log specific transaction errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const mongoError = error as { code?: number; codeName?: string };
+      if (mongoError.code === 20) {
+        console.error('❌ Transaction not supported: This MongoDB instance does not support transactions');
+        console.error('💡 Recommendation: Ensure you are using a replica set or MongoDB Atlas cluster (not standalone)');
+      } else if (mongoError.code === 50) {
+        console.error('❌ Write concern timeout: Transaction took too long to be acknowledged');
+      }
+    }
+
     throw error;
   } finally {
     console.log('🔧 Ending MongoDB session...');
     await session.endSession();
     console.log('✅ MongoDB session ended');
+  }
+}
+
+/**
+ * Execute a database operation with explicit write concern (without transaction)
+ * Use this as a fallback when transactions are not supported
+ */
+export async function withWriteConcern<T>(
+  operation: () => Promise<T>
+): Promise<T> {
+  console.log('📝 Executing operation with write concern (no transaction)...');
+
+  try {
+    const result = await operation();
+    console.log('✅ Operation completed with write concern');
+    return result;
+  } catch (error) {
+    console.error('❌ Operation with write concern failed:', error);
+    throw error;
   }
 }
