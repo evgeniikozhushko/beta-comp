@@ -6,6 +6,20 @@ import Registration from "@/lib/models/Registration";
 import { Types } from "mongoose";
 import { canManageEvent } from "@/lib/types/permissions";
 
+interface PopulatedUser {
+  _id: Types.ObjectId;
+  displayName?: string;
+  email?: string;
+  picture?: string;
+}
+
+interface PopulatedRegistration {
+  userId: PopulatedUser;
+  status: 'registered' | 'waitlisted' | 'cancelled';
+  registeredAt: Date;
+  cancelledAt?: Date;
+}
+
 interface AnalyticsData {
   eventId: string;
   eventName: string;
@@ -82,15 +96,15 @@ export async function GET(
     })
       .populate('userId', 'displayName email picture')
       .sort({ registeredAt: 1 }) // Earliest first
-      .lean();
+      .lean() as PopulatedRegistration[];
 
     // 7. Calculate summary statistics
-    const registeredCount = registrations.filter(r => r.status === 'registered').length;
-    const waitlistedCount = registrations.filter(r => r.status === 'waitlisted').length;
-    const cancelledCount = registrations.filter(r => r.status === 'cancelled').length;
+    const registeredCount = registrations.filter((r: PopulatedRegistration) => r.status === 'registered').length;
+    const waitlistedCount = registrations.filter((r: PopulatedRegistration) => r.status === 'waitlisted').length;
+    const cancelledCount = registrations.filter((r: PopulatedRegistration) => r.status === 'cancelled').length;
 
     // 8. Format participants data
-    const participants = registrations.map((reg: any) => ({
+    const participants = registrations.map((reg: PopulatedRegistration) => ({
       userId: reg.userId._id.toString(),
       displayName: reg.userId.displayName || 'Unknown',
       email: reg.userId.email || '',
@@ -102,7 +116,7 @@ export async function GET(
     // 9. Generate timeline data (registrations by day)
     const timelineMap = new Map<string, { registered: number; cancelled: number }>();
 
-    registrations.forEach((reg: any) => {
+    registrations.forEach((reg: PopulatedRegistration) => {
       // Track registration date
       const regDate = new Date(reg.registeredAt).toISOString().split('T')[0];
       if (!timelineMap.has(regDate)) {
